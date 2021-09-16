@@ -25,35 +25,69 @@
 - end : end node 인지 알려줌 
 """
 
-class Snode():
-    def __init__(self, action, num, end):
-        self.action = action
-        self.num = num
-        self.conf = False
-        self.parent = []
-        self.child = [] 
-        
-        if end:
-            self.end = end
-        else:
-            self.end = False
+class Node():
+    def __init__(self, name):
+        self.name = name
+        self.parent_nodes = []
+        self.child_nodes = []
+        self.mutex_nodes = []
+        self.pos = False
 
+    def add_child(self, obj):
+        self.child_nodes.append(obj)
     
-    def c_add(self, obj):
-        self.child.append(obj)
+    def add_parent(self, obj):
+        self.parent_nodes.append(obj)
     
-    def p_add(self, obj):
-        self.parent.append(obj)
+    def add_mutex(self, obj):
+        self.mutex_nodes.append(obj)
 
+    def remove_child(self, obj):
+        self.child_nodes.remove(obj)
 
-# class Sgraph():
-#     def __init__(self, end):
-#         self.end = end
+    def empty_childs(self):
+        self.child_nodes = []
     
-#     def research(self, value):
-        
-# 시작을 어떻게 해야할지 모르겠어요...
-# 
-# def research():
+    def remove_parent(self, obj):
+        self.parent_nodes.remove(obj)
+    
+    def remove_mutex(self, obj):
+        self.mutex_nodes.remove(obj)
 
+    def get_childs(self):
+        return self.child_nodes
     
+    def get_parents(self):
+        return self.parent_nodes
+    
+    def get_mutex(self):
+        return self.mutex_nodes
+
+    def num_childs(self):
+        return len(self.child_nodes)
+
+    def is_leaf(self):
+        return len(self.child_nodes) == 0
+
+    def __str__(self):
+        return self.name
+
+class Graph():
+    def __init__(self):
+        self.nodes = []
+
+    def add_node(self, node):
+        self.nodes.append(node)
+    
+    def get_node(self, name):
+        for node in self.nodes:
+            if node.name == name:
+                return node
+        return False
+
+    def is_empty(self):
+        return len(self.nodes) == 0
+
+    def get_node_list(self):
+        self.nodes = sorted(self.nodes, key=lambda x : x.num_childs())
+        return self.nodes
