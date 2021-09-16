@@ -61,7 +61,7 @@ def draw_graph(DG, idx, plot_file, node_list):
 Hyper-parameters
 '''
 LABEL_ROTATION = 30
-GRAPH_WIDTH = 15
+GRAPH_WIDTH = 16
 FONT_SIZE = 8
 node_count = 0
 plot_list = ["01-1", "02-1", "03-1"]

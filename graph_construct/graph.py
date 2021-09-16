@@ -30,7 +30,8 @@ class Node():
         self.name = name
         self.parent_nodes = []
         self.child_nodes = []
-        self.mutex_nodes = []
+        self.lower_nodes = []
+        self.higher_nodes = None
         self.pos = False
 
     def add_child(self, obj):
@@ -38,21 +39,33 @@ class Node():
     
     def add_parent(self, obj):
         self.parent_nodes.append(obj)
-    
-    def add_mutex(self, obj):
-        self.mutex_nodes.append(obj)
+
+    def add_lower(self, obj):
+        self.lower_nodes.append(obj)
+
+    def add_higher(self, obj):
+        self.higher_nodes.append(obj)
 
     def remove_child(self, obj):
         self.child_nodes.remove(obj)
-
-    def empty_childs(self):
-        self.child_nodes = []
     
     def remove_parent(self, obj):
         self.parent_nodes.remove(obj)
     
-    def remove_mutex(self, obj):
-        self.mutex_nodes.remove(obj)
+    def remove_lower(self, obj):
+        self.lower_nodes.remove(obj)
+    
+    def remove_higher(self, obj):
+        self.higher_nodes.remove(obj)
+
+    def empty_childs(self):
+        self.child_nodes = []
+
+    def empty_lowers(self):
+        self.lower_nodes = []
+
+    def empty_highers(self):
+        self.higher_nodes = []
 
     def get_childs(self):
         return self.child_nodes
@@ -60,14 +73,41 @@ class Node():
     def get_parents(self):
         return self.parent_nodes
     
-    def get_mutex(self):
-        return self.mutex_nodes
+    def get_lowers(self):
+        return self.lower_nodes
+    
+    def get_highers(self):
+        return self.higher_nodes
 
     def num_childs(self):
         return len(self.child_nodes)
 
+    def num_lowers(self):
+        return len(self.lower_nodes)
+
+    def num_highers(self):
+        return len(self.higher_nodes)
+
     def is_leaf(self):
         return len(self.child_nodes) == 0
+    
+    def can_reach(self, node, visited=[]):
+        if len(visited) == 0:
+            for lower in self.lower_nodes:
+                if lower != node:
+                    visited.append(lower)
+                    if lower.can_reach(node, visited):
+                        return True
+        else:
+            for child in self.child_nodes:
+                if child not in visited:
+                    if child == node:
+                        return True
+                    else:
+                        visited.append(child)
+                        if child.can_reach(node, visited):
+                            return True
+        return False
 
     def __str__(self):
         return self.name
@@ -88,6 +128,6 @@ class Graph():
     def is_empty(self):
         return len(self.nodes) == 0
 
-    def get_node_list(self):
-        self.nodes = sorted(self.nodes, key=lambda x : x.num_childs())
+    def get_node_list(self, func=lambda x : x.num_lowers()):
+        self.nodes = sorted(self.nodes, key=func)
         return self.nodes
