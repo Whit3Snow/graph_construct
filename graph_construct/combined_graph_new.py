@@ -32,7 +32,7 @@ def get_action_list(annotation_file):
 
     return refined_actions
 
-def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=0.5):
+def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=5):
     # From https://stackoverflow.com/questions/29586520/can-one-get-hierarchical-graphs-from-networkx-with-python-3/29597209#29597209
     if root is None:
         if isinstance(G, nx.DiGraph):
@@ -176,7 +176,6 @@ def draw_graph(graph):
                     node.add_child(child_node)
 
     for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
-        print(node)
         for higher in node.get_highers():
             if node not in higher.get_childs():
                 if not higher.can_reach(node, []):
@@ -188,7 +187,7 @@ def draw_graph(graph):
     edgelist = DG.edges(data=True)
 
     try:
-        pos = hierarchy_pos_2(DG, 'done')
+        pos = hierarchy_pos_1(DG, 'done')
         nx.draw_networkx_nodes(DG, pos=pos)
     except:
         # pos = nx.kamada_kawai_layout(DG)
@@ -197,7 +196,7 @@ def draw_graph(graph):
         nx.draw_networkx_nodes(DG, pos=pos)
     
 
-    for edge_type, style, color in [('1', 'solid', 'red'), ('2', 'dashed', 'green'), ('3', 'dotted', 'red'), ('4', 'dotted', 'blue')]:
+    for edge_type, style, color in [('1', 'solid', 'red'), ('2', 'dashed', 'green'), ('3', 'dotted', 'orange'), ('4', 'dotted', 'blue')]:
         edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
         nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color)
     
@@ -217,17 +216,21 @@ GRAPH_WIDTH = 8
 FONT_SIZE = 8
 EDGE_COLOR = "green"
 
-# plot_list = ["13-1", "17-2", "09-1"]
+plot_list = ["13-1", "17-2", "09-1"]
 # plot_list = ["07-1", "13-1", "15-2"]
 
-# plot_list = ["01-2", "03-1"]
-# plot_list = ["01-1"]
+# plot_list = ['03-1', '07-1', '25-2']
+# plot_list = ['16-2', '19-1', '10-2']
+# plot_list = ['05-1']
 
-plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
-random.shuffle(plot_list)
-plot_list = plot_list[:30]
 
-# individual_graph.main(plot_list)
+# plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
+# random.shuffle(plot_list)
+# plot_list = plot_list[:3]
+
+individual_graph.main(plot_list)
+
+print(plot_list)
 
 all_action_list = []
 for idx, plot_file in enumerate(plot_list):
