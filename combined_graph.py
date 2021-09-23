@@ -235,7 +235,7 @@ print(plot_list)
 
 all_action_list = []
 for idx, plot_file in enumerate(plot_list):
-    all_action_list.append(get_action_list("activityAnnotations/{}-activityAnnotation.txt".format(plot_file)))
+    all_action_list.append(get_action_list("data/50salads/labels/{}-activityAnnotation.txt".format(plot_file)))
 
 graph_object = construct_graph(all_action_list)
 draw_graph(graph_object)
