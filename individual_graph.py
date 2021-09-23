@@ -74,7 +74,7 @@ def main(plot_list):
     DG = nx.DiGraph()
 
     for idx, plot_file in enumerate(plot_list):
-        node_list = get_node_list("../activityAnnotations/{}-activityAnnotation.txt".format(plot_file))
+        node_list = get_node_list("activityAnnotations/{}-activityAnnotation.txt".format(plot_file))
         draw_graph(DG, idx, plot_file, node_list)
 
     labels = nx.get_node_attributes(DG, 'name') 

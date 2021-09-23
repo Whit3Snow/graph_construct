@@ -32,7 +32,7 @@ def get_action_list(annotation_file):
 
     return refined_actions
 
-def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=0.5):
+def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=5):
     # From https://stackoverflow.com/questions/29586520/can-one-get-hierarchical-graphs-from-networkx-with-python-3/29597209#29597209
     if root is None:
         if isinstance(G, nx.DiGraph):
@@ -111,7 +111,7 @@ def hierarchy_pos_2(G, root=None, levels=None, width=1., height=1.):
 
 def construct_graph(all_action_list):
     graph = Graph()
-    for jdx, action_list in enumerate(all_action_list):
+    for action_list in all_action_list:
         for idx, name in enumerate(action_list):
             cur_node = graph.get_node(name)
             if cur_node == False:
@@ -139,6 +139,18 @@ def construct_graph(all_action_list):
                     if (child_node not in cur_node.get_childs()) and (child_node in cur_node.get_lowers()):
                         cur_node.add_child(child_node)
 
+        for idx, name in enumerate(action_list):
+            cur_node = graph.get_node(name)
+            if cur_node.get_highers() == None:
+                cur_node.empty_highers()
+                for higher_name in action_list[idx+1:]:
+                    higher_node = graph.get_node(higher_name)
+                    if higher_node not in cur_node.get_highers():
+                        cur_node.add_higher(higher_node)
+            else:
+                updated_highers = [higher_node for higher_node in cur_node.get_highers() if higher_node.name in action_list[idx+1:]]
+                cur_node.higher_nodes = updated_highers
+
     return graph
 
 def draw_graph(graph):
@@ -153,31 +165,23 @@ def draw_graph(graph):
 
     for i, node in enumerate(graph.get_node_list()):
         for child in node.get_childs():
-            style = 'dashed' if node.num_childs() > 1 else 'solid'
-            DG.add_edge(node.name, child.name, style=style)
+            style = '2' if node.num_childs() > 1 else '1'
+            DG.add_edge(node.name, child.name, edge_type=style)
         
-        asdf = list(set(node.get_lowers()) - set(node.get_childs()))
-        if len(asdf):
-            print(node)
-            print('childs', end=': ')
-            for aa in node.get_childs():
-                print(aa, end=', ')
-            print('')
-            print('diff', end=': ')
-            for aa in asdf:
-                print(aa, end=', ')
-            print('')
-            # print('-> ', end='')
-            for lower in node.get_lowers():
-                if lower not in node.get_childs():
-                    print("starting", lower)
-                    if not node.can_reach(lower, []):
-                        print('+', lower)
-                        DG.add_edge(node.name, lower.name, style='dotted')
-                        child_node = graph.get_node(lower.name)
-                        node.add_child(child_node)
-            print('')
-            # input()
+        for lower in node.get_lowers():
+            if lower not in node.get_childs():
+                if not node.can_reach(lower, []):
+                    DG.add_edge(node.name, lower.name, edge_type='3')
+                    child_node = graph.get_node(lower.name)
+                    node.add_child(child_node)
+
+    for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
+        for higher in node.get_highers():
+            if node not in higher.get_childs():
+                if not higher.can_reach(node, []):
+                    DG.add_edge(higher.name, node.name, edge_type='4')
+                    higher_node = graph.get_node(higher.name)
+                    higher_node.add_child(node)
 
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
@@ -192,8 +196,8 @@ def draw_graph(graph):
         nx.draw_networkx_nodes(DG, pos=pos)
     
 
-    for style, color in [('solid', 'red'), ('dashed', 'green'), ('dotted', 'red')]:
-        edges = [(u, v) for (u, v, d) in edgelist if d["style"] == style]
+    for edge_type, style, color in [('1', 'solid', 'red'), ('2', 'dotted', 'red'), ('3', 'dashed', 'green'), ('4', 'dashed', 'blue')]:
+        edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
         nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color)
     
     labels = nx.get_node_attributes(DG, 'name')
@@ -213,19 +217,25 @@ FONT_SIZE = 8
 EDGE_COLOR = "green"
 
 # plot_list = ["13-1", "17-2", "09-1"]
+# plot_list = ["07-1", "13-1", "15-2"]
+# plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
-# plot_list = ["01-1", "03-1"]
-# plot_list = ["01-1"]
+plot_list = ['03-1', '07-1', '25-2']
+# plot_list = ['16-2', '19-1', '10-2']
+# plot_list = ['05-1']
 
-plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
-random.shuffle(plot_list)
-plot_list = plot_list[:3]
+
+# plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
+# random.shuffle(plot_list)
+# plot_list = plot_list[:]
 
 individual_graph.main(plot_list)
 
+print(plot_list)
+
 all_action_list = []
 for idx, plot_file in enumerate(plot_list):
-    all_action_list.append(get_action_list("../activityAnnotations/{}-activityAnnotation.txt".format(plot_file)))
+    all_action_list.append(get_action_list("activityAnnotations/{}-activityAnnotation.txt".format(plot_file)))
 
 graph_object = construct_graph(all_action_list)
 draw_graph(graph_object)
