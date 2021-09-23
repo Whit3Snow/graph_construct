@@ -187,7 +187,7 @@ def draw_graph(graph):
     edgelist = DG.edges(data=True)
 
     try:
-        pos = hierarchy_pos_1(DG, 'done')
+        pos = hierarchy_pos_2(DG, 'done')
         nx.draw_networkx_nodes(DG, pos=pos)
     except:
         # pos = nx.kamada_kawai_layout(DG)
@@ -196,7 +196,7 @@ def draw_graph(graph):
         nx.draw_networkx_nodes(DG, pos=pos)
     
 
-    for edge_type, style, color in [('1', 'solid', 'red'), ('2', 'dashed', 'green'), ('3', 'dotted', 'orange'), ('4', 'dotted', 'blue')]:
+    for edge_type, style, color in [('1', 'solid', 'red'), ('2', 'dotted', 'red'), ('3', 'dashed', 'green'), ('4', 'dashed', 'blue')]:
         edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
         nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color)
     
@@ -216,17 +216,18 @@ GRAPH_WIDTH = 8
 FONT_SIZE = 8
 EDGE_COLOR = "green"
 
-plot_list = ["13-1", "17-2", "09-1"]
+# plot_list = ["13-1", "17-2", "09-1"]
 # plot_list = ["07-1", "13-1", "15-2"]
+# plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
-# plot_list = ['03-1', '07-1', '25-2']
+plot_list = ['03-1', '07-1', '25-2']
 # plot_list = ['16-2', '19-1', '10-2']
 # plot_list = ['05-1']
 
 
 # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
 # random.shuffle(plot_list)
-# plot_list = plot_list[:3]
+# plot_list = plot_list[:]
 
 individual_graph.main(plot_list)
 
