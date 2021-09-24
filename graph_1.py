@@ -32,13 +32,11 @@ class Node():
         self.child_nodes = []
         self.lower_nodes = []
         self.higher_nodes = None
-        self.activated = False
-
-    def is_activated(self):
-        return self.activated
+        self.edge_nodes = []
 
     def add_child(self, obj):
         self.child_nodes.append(obj)
+        obj.add_parent(self)
     
     def add_parent(self, obj):
         self.parent_nodes.append(obj)
@@ -48,6 +46,9 @@ class Node():
 
     def add_higher(self, obj):
         self.higher_nodes.append(obj)
+
+    def add_edge(self, obj, edge_type):
+        self.edge_nodes.append((obj, edge_type))
 
     def remove_child(self, obj):
         self.child_nodes.remove(obj)
@@ -62,10 +63,22 @@ class Node():
         self.higher_nodes.remove(obj)
 
     def empty_childs(self):
+        for child in self.child_nodes:
+            child.remove_parent(self)
         self.child_nodes = []
 
     def empty_lowers(self):
         self.lower_nodes = []
+
+    def update_child_nodes(self, new_nodes):
+        for child in self.child_nodes:
+            child.remove_parent(self)
+        self.child_nodes = new_nodes
+        for child in self.child_nodes:
+            child.add_parent(self)
+
+    def update_lower_nodes(self, new_nodes):
+        self.lower_nodes = new_nodes
 
     def empty_highers(self):
         self.higher_nodes = []
@@ -93,22 +106,48 @@ class Node():
 
     def is_leaf(self):
         return len(self.child_nodes) == 0
+
+    def has_edge(self, target_node, target_edge_type):
+        for node, edge_type in self.edge_nodes:
+            if node == target_node and edge_type == target_edge_type:
+                return True
+        return False
+
+    def remove_edge(self, target_node, target_edge_type):
+        for cur_node in self.edge_nodes:
+            node, edge_type = cur_node
+            if node == target_node and edge_type == target_edge_type:
+                self.edge_nodes.remove(cur_node)
+                break
     
-    def can_reach(self, node, visited=[]):
+    def can_reach(self, node, visited, target_edges=[]):
         if len(visited) == 0:
             for lower in self.lower_nodes:
                 if lower != node:
                     visited.append(lower)
-                    if lower.can_reach(node, visited):
+                    if lower.can_reach(node, visited, target_edges):
                         return True
         else:
-            for child in self.child_nodes:
+            for child, edge_type in self.edge_nodes:
+                if not target_edges or edge_type in target_edges:
+                    if child not in visited:
+                        if child == node:
+                            return True
+                        else:
+                            visited.append(child)
+                            if child.can_reach(node, visited, target_edges):
+                                return True
+        return False
+
+    def can_reach2(self, node, visited, target_edges=[]):
+        for child, edge_type in self.edge_nodes:
+            if not target_edges or edge_type in target_edges:
                 if child not in visited:
                     if child == node:
                         return True
                     else:
                         visited.append(child)
-                        if child.can_reach(node, visited):
+                        if child.can_reach(node, visited, target_edges):
                             return True
         return False
 
@@ -122,22 +161,15 @@ class Graph():
     def add_node(self, node):
         self.nodes.append(node)
     
-    # def get_node(self, name):
-    #     for node in self.nodes:
-    #         if node.name == name:
-    #             return node
-    #     return False
-    
     def get_node(self, name):
-        node_list = []
         for node in self.nodes:
             if node.name == name:
-                node_list.append(node)
-        return node_list
+                return node
+        return False
 
     def is_empty(self):
         return len(self.nodes) == 0
 
     def get_node_list(self, func=lambda x : x.num_lowers()):
-        self.nodes = sorted(self.nodes, key=func)
+        # self.nodes = sorted(self.nodes, key=func)
         return self.nodes

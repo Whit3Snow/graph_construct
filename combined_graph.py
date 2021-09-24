@@ -121,8 +121,9 @@ def construct_graph(all_action_list):
                         lower_node = graph.get_node(lower_name)
                         if lower_node not in cur_node.get_lowers():
                             cur_node.add_lower(lower_node)
-                    child_node = graph.get_node(action_list[idx-1])
-                    cur_node.add_child(child_node)
+                    if CHILD:
+                        child_node = graph.get_node(action_list[idx-1])
+                        cur_node.add_child(child_node)
                 graph.add_node(cur_node)
             else:
                 if idx == 0:
@@ -130,14 +131,15 @@ def construct_graph(all_action_list):
                     cur_node.empty_lowers()
                 elif idx > 0:
                     updated_lowers = [lower_node for lower_node in cur_node.get_lowers() if lower_node.name in action_list[:idx]]
-                    cur_node.lower_nodes = updated_lowers
-                    updated_childs = [child_node for child_node in cur_node.get_childs() if child_node in cur_node.get_lowers()]
-                    cur_node.child_nodes = updated_childs
-                    
-                    child_name = action_list[idx-1]
-                    child_node = graph.get_node(child_name)
-                    if (child_node not in cur_node.get_childs()) and (child_node in cur_node.get_lowers()):
-                        cur_node.add_child(child_node)
+                    cur_node.update_lower_nodes(updated_lowers)
+                    if CHILD:
+                        updated_childs = [child_node for child_node in cur_node.get_childs() if child_node in cur_node.get_lowers()]
+                        cur_node.update_child_nodes(updated_childs)
+                        
+                        child_name = action_list[idx-1]
+                        child_node = graph.get_node(child_name)
+                        if (child_node not in cur_node.get_childs()) and (child_node in cur_node.get_lowers()):
+                            cur_node.add_child(child_node)
 
         for idx, name in enumerate(action_list):
             cur_node = graph.get_node(name)
@@ -158,7 +160,7 @@ def draw_graph(graph):
     r = f.canvas.get_renderer()
     plt.axis('equal')
 
-    DG = nx.DiGraph()
+    DG = nx.MultiDiGraph()
 
     for i, node in enumerate(graph.get_node_list()):
         DG.add_node(node.name, name=node.name)
@@ -168,25 +170,25 @@ def draw_graph(graph):
             style = '2' if node.num_childs() > 1 else '1'
             DG.add_edge(node.name, child.name, edge_type=style)
         
+    for i, node in enumerate(graph.get_node_list()):
         for lower in node.get_lowers():
             if lower not in node.get_childs():
                 if not node.can_reach(lower, []):
                     DG.add_edge(node.name, lower.name, edge_type='3')
-                    child_node = graph.get_node(lower.name)
-                    node.add_child(child_node)
+                    node.add_child(lower)
 
     for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
         for higher in node.get_highers():
             if node not in higher.get_childs():
                 if not higher.can_reach(node, []):
                     DG.add_edge(higher.name, node.name, edge_type='4')
-                    higher_node = graph.get_node(higher.name)
-                    higher_node.add_child(node)
+                    higher.add_child(node)
 
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
 
     try:
+        # pos = nx.shell_layout(DG)
         pos = hierarchy_pos_2(DG, 'done')
         nx.draw_networkx_nodes(DG, pos=pos)
     except:
@@ -196,9 +198,9 @@ def draw_graph(graph):
         nx.draw_networkx_nodes(DG, pos=pos)
     
 
-    for edge_type, style, color in [('1', 'solid', 'red'), ('2', 'dotted', 'red'), ('3', 'dashed', 'green'), ('4', 'dashed', 'blue')]:
+    for edge_type, style, color in EDGE_STYLES:
         edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
-        nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color)
+        nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color, connectionstyle='arc3, rad=0.1')
     
     labels = nx.get_node_attributes(DG, 'name')
     description = nx.draw_networkx_labels(DG, pos=pos, labels=labels, font_size=FONT_SIZE)
@@ -216,18 +218,40 @@ GRAPH_WIDTH = 8
 FONT_SIZE = 8
 EDGE_COLOR = "green"
 
-# plot_list = ["13-1", "17-2", "09-1"]
+CHILD = True
+
+EDGE_STYLES = [
+    ('1', 'solid', 'red'), 
+    ('2', 'dotted', 'red'), 
+    ('3', 'dashed', 'green'), 
+    ('4', 'dashed', 'blue'),
+    ('5', 'dashed', 'black')
+    ]
+
+plot_list = ["13-1", "17-2", "09-1"]
 # plot_list = ["07-1", "13-1", "15-2"]
 # plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
-plot_list = ['03-1', '07-1', '25-2']
+# plot_list = ['03-1', '07-1', '25-2']
 # plot_list = ['16-2', '19-1', '10-2']
 # plot_list = ['05-1']
+# plot_list = ['05-1', '17-1']
+# plot_list = ['17-1']
 
+# plot_list = ['08-2', '18-1', '03-1']
+# plot_list = ['08-2', '20-1', '06-1']
+
+# plot_list = ['10-1', '11-2', '13-1', '15-1', '23-2', '08-2', '05-2', '11-1', '24-2', '08-1', '18-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '23-1', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
+# plot_list = ['10-1', '21-1', '26-2', '24-2']
+
+# plot_list = ['10-1', '11-2', '13-1', '15-1', '23-2', '08-2', '05-2', '11-1', '24-2', '08-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
+# plot_list = ['12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
+# plot_list = ['12-2', '21-1']
+# plot_list = ['12-2', '18-1']
 
 # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
 # random.shuffle(plot_list)
-# plot_list = plot_list[:]
+# plot_list = plot_list[:30]
 
 individual_graph.main(plot_list)
 

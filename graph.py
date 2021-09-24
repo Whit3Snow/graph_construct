@@ -64,6 +64,12 @@ class Node():
     def empty_lowers(self):
         self.lower_nodes = []
 
+    def update_child_nodes(self, new_nodes):
+        self.child_nodes = new_nodes
+
+    def update_lower_nodes(self, new_nodes):
+        self.lower_nodes = new_nodes
+
     def empty_highers(self):
         self.higher_nodes = []
 
@@ -129,5 +135,5 @@ class Graph():
         return len(self.nodes) == 0
 
     def get_node_list(self, func=lambda x : x.num_lowers()):
-        self.nodes = sorted(self.nodes, key=func)
+        # self.nodes = sorted(self.nodes, key=func)
         return self.nodes
