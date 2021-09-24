@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 from graph_1 import *
 import random
 import individual_graph
@@ -109,6 +110,56 @@ def hierarchy_pos_2(G, root=None, levels=None, width=1., height=1.):
     vert_gap = height / (max([l for l in levels])+1)
     return make_pos({}, root)
 
+
+def hierarchy_pos_3(G, root):
+
+    def remaining_neighbors(neighbors):
+        return [n for n in neighbors if n not in list(done.keys())]
+    
+    node_list = [root]
+    done = {}
+    done[root] = 0
+    level = {}
+    level[0] = [1, 0]
+
+    for node in node_list:
+        cur_level = done[node]
+        child_nodes = list(G.neighbors(node))
+        child_nodes = sorted(child_nodes, key=lambda x : -len(list(G.neighbors(x))))
+        cur_child_cnt = -1
+        cur_child_level = cur_level
+        for child in remaining_neighbors(child_nodes):
+            child_cnt = len(list(G.neighbors(child)))
+            if cur_child_cnt < 0 or cur_child_cnt != child_cnt:
+                cur_child_cnt = child_cnt
+                cur_child_level += 1
+                if cur_child_level not in level:
+                    level[cur_child_level] = [0, 0]
+            done[child] = cur_child_level
+            level[cur_child_level][0] += 1
+            node_list.append(child)
+    
+    print(done)
+    print(level)
+
+    max_level_cnt = max(list(level.values()))[0]
+    pos = {}
+    for node in done:
+        y = done[node]
+        level_cnt, idx = level[y]
+        if level_cnt == 1:
+            x = 0
+        else:
+            step = max_level_cnt/(level_cnt-1)
+            start = -max_level_cnt/2
+            end = max_level_cnt/2+1
+            float_range_array = list(np.arange(start, end, step))
+            x = float_range_array[idx]
+        level[y][1] += 1
+        pos[node] = (x, -y)
+    return pos
+
+
 def construct_graph(all_action_list):
     graph = Graph()
     for action_list in all_action_list:
@@ -155,6 +206,32 @@ def construct_graph(all_action_list):
 
     return graph
 
+def reconstruct_graph(graph):
+    for i, node in enumerate(graph.get_node_list()):
+        for child in node.get_childs():
+            node.add_edge(child, 'child')
+        
+    for i, node in enumerate(graph.get_node_list()):
+        for lower in node.get_lowers():
+            if lower not in node.get_edge_nodes() and not node.can_reach(lower, []):
+                node.add_edge(lower, 'lower')
+
+    for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
+        for higher in node.get_highers():
+            if node not in higher.get_edge_nodes() and not higher.can_reach(node, []):
+                higher.add_edge(node, 'higher')
+                reconstruct_list = []
+                for parent, edge_type in node.get_edge_parents():
+                    if parent.has_edge(node, 'lower') and parent.can_reach2(node, ['child', 'higher']):
+                        reconstruct_list.append(parent)
+                for reconstruct in reconstruct_list:
+                    reconstruct.remove_edge(node, 'lower')
+                    higher.remove_edge(node, 'higher')
+                    higher.add_edge(node, 'new')
+    
+    return graph
+
+
 def draw_graph(graph):
     f = plt.figure(figsize=(GRAPH_WIDTH, GRAPH_WIDTH))
     r = f.canvas.get_renderer()
@@ -166,42 +243,18 @@ def draw_graph(graph):
         DG.add_node(node.name, name=node.name)
 
     for i, node in enumerate(graph.get_node_list()):
-        for child in node.get_childs():
-            style = '2' if node.num_childs() > 1 else '1'
-            DG.add_edge(node.name, child.name, edge_type=style)
-            node.add_edge(child, 'child')
-        
-    for i, node in enumerate(graph.get_node_list()):
-        for lower in node.get_lowers():
-            if lower not in node.get_childs():
-                if not node.can_reach(lower, []):
-                    DG.add_edge(node.name, lower.name, edge_type='3')
-                    node.add_edge(lower, 'lower')
-
-    for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
-        for higher in node.get_highers():
-            if node not in higher.get_childs():
-                if not higher.can_reach(node, []):
-                    higher.add_edge(node, 'higher')
-                    reconstruct = None
-                    for parent in node.get_parents():
-                        if parent.has_edge(node, 'lower') and parent.can_reach2(node, ['child', 'higher']):
-                            reconstruct = parent
-                            break
-                    if reconstruct != None:
-                        reconstruct.remove_edge(node, 'lower')
-                        higher.add_edge(node, 'new')
-                    else:
-                        DG.add_edge(higher.name, node.name, edge_type='4')
+        for edge_node, edge_type in node.get_edges():
+            DG.add_edge(node.name, edge_node.name, edge_type=edge_type)
 
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
 
     try:
         # pos = nx.shell_layout(DG)
-        pos = hierarchy_pos_2(DG, 'done')
+        pos = hierarchy_pos_3(DG, 'done')
         nx.draw_networkx_nodes(DG, pos=pos)
-    except:
+    except Exception as e:
+        print(e)
         # pos = nx.kamada_kawai_layout(DG)
         # pos = nx.spiral_layout(DG)
         pos = nx.random_layout(DG)
@@ -210,7 +263,7 @@ def draw_graph(graph):
 
     for edge_type, style, color in EDGE_STYLES:
         edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
-        nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color, connectionstyle='arc3, rad=0.1')
+        nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color, connectionstyle='arc3, rad={}'.format(random.uniform(0.05, 0.2)))
     
     labels = nx.get_node_attributes(DG, 'name')
     description = nx.draw_networkx_labels(DG, pos=pos, labels=labels, font_size=FONT_SIZE)
@@ -231,11 +284,10 @@ EDGE_COLOR = "green"
 CHILD = True
 
 EDGE_STYLES = [
-    ('1', 'solid', 'red'), 
-    ('2', 'dotted', 'red'), 
-    ('3', 'dashed', 'green'), 
-    ('4', 'dashed', 'blue'),
-    ('5', 'dashed', 'black')
+    ('child', 'solid', 'red'), 
+    ('lower', 'dashed', 'green'), 
+    ('higher', 'dashed', 'blue'),
+    ('new', 'dashed', 'black')
     ]
 
 # plot_list = ["13-1", "17-2", "09-1"]
@@ -256,14 +308,14 @@ EDGE_STYLES = [
 
 # plot_list = ['10-1', '11-2', '13-1', '15-1', '23-2', '08-2', '05-2', '11-1', '24-2', '08-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
 # plot_list = ['12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
-plot_list = ['12-2', '21-1']
+# plot_list = ['12-2', '21-1']
 # plot_list = ['12-2', '18-1']
 
-# plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
-# random.shuffle(plot_list)
+plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
+random.shuffle(plot_list)
 # plot_list = plot_list[:30]
 
-individual_graph.main(plot_list)
+# individual_graph.main(plot_list)
 
 print(plot_list)
 
@@ -272,4 +324,5 @@ for idx, plot_file in enumerate(plot_list):
     all_action_list.append(get_action_list("data/50salads/labels/{}-activityAnnotation.txt".format(plot_file)))
 
 graph_object = construct_graph(all_action_list)
+graph_object = reconstruct_graph(graph_object)
 draw_graph(graph_object)

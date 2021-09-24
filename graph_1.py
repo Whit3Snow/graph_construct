@@ -28,19 +28,15 @@
 class Node():
     def __init__(self, name):
         self.name = name
-        self.parent_nodes = []
         self.child_nodes = []
         self.lower_nodes = []
         self.higher_nodes = None
         self.edge_nodes = []
+        self.edge_parent_nodes = []
 
     def add_child(self, obj):
         self.child_nodes.append(obj)
-        obj.add_parent(self)
     
-    def add_parent(self, obj):
-        self.parent_nodes.append(obj)
-
     def add_lower(self, obj):
         self.lower_nodes.append(obj)
 
@@ -49,12 +45,10 @@ class Node():
 
     def add_edge(self, obj, edge_type):
         self.edge_nodes.append((obj, edge_type))
+        obj.edge_parent_nodes.append((self, edge_type))
 
     def remove_child(self, obj):
         self.child_nodes.remove(obj)
-    
-    def remove_parent(self, obj):
-        self.parent_nodes.remove(obj)
     
     def remove_lower(self, obj):
         self.lower_nodes.remove(obj)
@@ -63,19 +57,13 @@ class Node():
         self.higher_nodes.remove(obj)
 
     def empty_childs(self):
-        for child in self.child_nodes:
-            child.remove_parent(self)
         self.child_nodes = []
 
     def empty_lowers(self):
         self.lower_nodes = []
 
     def update_child_nodes(self, new_nodes):
-        for child in self.child_nodes:
-            child.remove_parent(self)
         self.child_nodes = new_nodes
-        for child in self.child_nodes:
-            child.add_parent(self)
 
     def update_lower_nodes(self, new_nodes):
         self.lower_nodes = new_nodes
@@ -86,14 +74,20 @@ class Node():
     def get_childs(self):
         return self.child_nodes
     
-    def get_parents(self):
-        return self.parent_nodes
-    
     def get_lowers(self):
         return self.lower_nodes
     
     def get_highers(self):
         return self.higher_nodes
+
+    def get_edges(self):
+        return self.edge_nodes
+
+    def get_edge_nodes(self):
+        return [edge_node for (edge_node, _) in self.edge_nodes]
+
+    def get_edge_parents(self):
+        return self.edge_parent_nodes
 
     def num_childs(self):
         return len(self.child_nodes)
