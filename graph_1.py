@@ -103,7 +103,7 @@ class Node():
 
     def has_edge(self, target_node, target_edge_type):
         for node, edge_type in self.edge_nodes:
-            if node == target_node and edge_type == target_edge_type:
+            if node == target_node and edge_type in target_edge_type:
                 return True
         return False
 
@@ -114,35 +114,46 @@ class Node():
                 self.edge_nodes.remove(cur_node)
                 break
     
-    def can_reach(self, node, visited, target_edges=[]):
-        if len(visited) == 0:
+    def can_reach(self, node, visited_nodes):
+        if len(visited_nodes) == 0:
             for lower in self.lower_nodes:
                 if lower != node:
-                    visited.append(lower)
-                    if lower.can_reach(node, visited, target_edges):
+                    visited_nodes.append(lower)
+                    if lower.can_reach(node, visited_nodes):
                         return True
         else:
             for child, edge_type in self.edge_nodes:
-                if not target_edges or edge_type in target_edges:
-                    if child not in visited:
-                        if child == node:
-                            return True
-                        else:
-                            visited.append(child)
-                            if child.can_reach(node, visited, target_edges):
-                                return True
-        return False
-
-    def can_reach2(self, node, visited, target_edges=[]):
-        for child, edge_type in self.edge_nodes:
-            if not target_edges or edge_type in target_edges:
-                if child not in visited:
+                if child not in visited_nodes:
                     if child == node:
                         return True
                     else:
-                        visited.append(child)
-                        if child.can_reach(node, visited, target_edges):
+                        visited_nodes.append(child)
+                        if child.can_reach(node, visited_nodes):
                             return True
+        return False
+    
+    def can_reach2(self, node, remove_node=None):
+        if self == node:
+            return True
+        check_nodes = [n for n in (self.child_nodes + self.lower_nodes) if n != remove_node]
+        for lower in check_nodes:
+            if lower.can_reach2(node, remove_node=None):
+                return True
+        return False
+
+    def is_connected(self, node, visited_nodes, ignored_edges=[], target_edge_types=[]):
+        for child, edge_type in self.edge_nodes:
+            if (child, edge_type) in ignored_edges:
+                continue
+            if len(target_edge_types) > 0 and edge_type not in target_edge_types:
+                continue
+            if child not in visited_nodes:
+                if child == node:
+                    return True
+                else:
+                    visited_nodes.append(child)
+                    if child.is_connected(node, visited_nodes, ignored_edges, target_edge_types):
+                        return True
         return False
 
     def __str__(self):

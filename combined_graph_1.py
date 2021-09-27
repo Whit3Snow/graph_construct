@@ -213,22 +213,27 @@ def reconstruct_graph(graph):
         
     for i, node in enumerate(graph.get_node_list()):
         for lower in node.get_lowers():
-            if lower not in node.get_edge_nodes() and not node.can_reach(lower, []):
+            # if lower not in node.get_edge_nodes() and not node.can_reach(lower, []):
+            if lower not in node.get_edge_nodes() and not node.can_reach2(lower, remove_node=lower):
                 node.add_edge(lower, 'lower')
 
     for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
         for higher in node.get_highers():
-            if node not in higher.get_edge_nodes() and not higher.can_reach(node, []):
+            # if node not in higher.get_edge_nodes() and not higher.can_reach(node, []):
+            if node not in higher.get_edge_nodes() and not higher.can_reach2(node, remove_node=node):
                 higher.add_edge(node, 'higher')
                 reconstruct_list = []
                 for parent, edge_type in node.get_edge_parents():
-                    if parent.has_edge(node, 'lower') and parent.can_reach2(node, ['child', 'higher']):
+                    if parent.has_edge(node, ['lower', 'child']) and parent.is_connected(node, ['higher']):
                         reconstruct_list.append(parent)
                 for reconstruct in reconstruct_list:
                     reconstruct.remove_edge(node, 'lower')
                     higher.remove_edge(node, 'higher')
-                    higher.add_edge(node, 'new')
-    
+                    # higher.add_edge(node, 'new')
+                    if not higher.has_edge(node, 'new'):
+                        higher.add_edge(node, 'new')
+                    print(node, higher, reconstruct)
+
     return graph
 
 
@@ -263,7 +268,7 @@ def draw_graph(graph):
 
     for edge_type, style, color in EDGE_STYLES:
         edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
-        nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color, connectionstyle='arc3, rad={}'.format(random.uniform(0.05, 0.2)))
+        nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color, connectionstyle='arc3, rad={}'.format(0.05)) # random.uniform(0.05, 0.2)
     
     labels = nx.get_node_attributes(DG, 'name')
     description = nx.draw_networkx_labels(DG, pos=pos, labels=labels, font_size=FONT_SIZE)
@@ -313,6 +318,7 @@ EDGE_STYLES = [
 
 # WORST
 # plot_list = ['18-1', '26-2', '26-1']
+# plot_list = ['26-2', '26-1']
 
 # WHY BLACK IS ADDED
 plot_list = ['26-2', '26-1', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
