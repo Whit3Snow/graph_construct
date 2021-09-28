@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-from graph_1 import *
+from graph import *
 import random
 import individual_graph
 
