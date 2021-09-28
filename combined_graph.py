@@ -159,21 +159,23 @@ def hierarchy_pos_3(G, root):
 
 def construct_graph(all_action_list):
     graph = Graph()
-    for action_list in all_action_list:
-        for idx, name in enumerate(action_list):
-            cur_node = graph.get_node(name)
-            if cur_node == False:
-                cur_node = Node(name)
-                if idx > 0:
-                    for lower_name in action_list[:idx]:
-                        lower_node = graph.get_node(lower_name)
-                        if lower_node not in cur_node.get_lowers():
-                            cur_node.add_lower(lower_node)
-                graph.add_node(cur_node)
-            else:
-                if idx == 0:
+    for action_list in all_action_list: # action_list는 영상의 label 순서대로 들어감.
+        for idx, name in enumerate(action_list): # idx = 순서, name = label 이름 
+            cur_node = graph.get_node(name) # 현재 들어온 node가 이전에 들어왔는지 확인하기 위함
+            if cur_node == False: # 들어오지 않았던 node인 경우
+                cur_node = Node(name) # name으로 Node 객체를 만들어준다.
+                if idx > 0: # idx > 0
+                    for lower_name in action_list[:idx]: # 현재 node보다 앞에 온 node들을 node로 추가해준다./ lower_name는 앞의 노드 
+                        lower_node = graph.get_node(lower_name) # lower_name에 맞는 node 객체를 가져온다.
+                        if lower_node not in cur_node.get_lowers():  
+                            cur_node.add_lower(lower_node) # 만약 추가되지 않은 lower 이라면 추가한다.
+                    
+                graph.add_node(cur_node) # 현재 노드(cur_node)의 속성을 모두 추가해주면 graph에 추가해준다.
+            else: # 이미 존재했던 노드인 경우 
+                if idx == 0: 
+                    cur_node.empty_childs()
                     cur_node.empty_lowers()
-                elif idx > 0:
+                elif idx > 0: # cur_node의 기존의 lowers에서 현재 그래프의 lowers와 겹치는 것만 lower로 취급한다.
                     updated_lowers = [lower_node for lower_node in cur_node.get_lowers() if lower_node.name in action_list[:idx]]
                     cur_node.update_lower_nodes(updated_lowers)
 
@@ -291,10 +293,10 @@ EDGE_STYLES = [
 
 # WORST
 # plot_list = ['18-1', '26-2', '26-1']
-# plot_list = ['26-2', '26-1']
+plot_list = ['26-2', '26-1']
 
 # WHY BLACK IS ADDED
-plot_list = ['26-2', '26-1', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
+#plot_list = ['26-2', '26-1', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
 
 # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
 # random.shuffle(plot_list)
