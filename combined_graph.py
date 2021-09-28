@@ -173,7 +173,6 @@ def construct_graph(all_action_list):
                 graph.add_node(cur_node) # 현재 노드(cur_node)의 속성을 모두 추가해주면 graph에 추가해준다.
             else: # 이미 존재했던 노드인 경우 
                 if idx == 0: 
-                    cur_node.empty_childs()
                     cur_node.empty_lowers()
                 elif idx > 0: # cur_node의 기존의 lowers에서 현재 그래프의 lowers와 겹치는 것만 lower로 취급한다.
                     updated_lowers = [lower_node for lower_node in cur_node.get_lowers() if lower_node.name in action_list[:idx]]
