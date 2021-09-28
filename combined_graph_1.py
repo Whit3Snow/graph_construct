@@ -138,9 +138,6 @@ def hierarchy_pos_3(G, root):
             done[child] = cur_child_level
             level[cur_child_level][0] += 1
             node_list.append(child)
-    
-    print(done)
-    print(level)
 
     max_level_cnt = max(list(level.values()))[0]
     pos = {}
@@ -206,33 +203,44 @@ def construct_graph(all_action_list):
 
     return graph
 
+
 def reconstruct_graph(graph):
     for i, node in enumerate(graph.get_node_list()):
-        for child in node.get_childs():
-            node.add_edge(child, 'child')
+        for cnode in node.get_childs():
+            node.add_edge(cnode, 'child')
         
     for i, node in enumerate(graph.get_node_list()):
-        for lower in node.get_lowers():
-            # if lower not in node.get_edge_nodes() and not node.can_reach(lower, []):
-            if lower not in node.get_edge_nodes() and not node.can_reach2(lower, remove_node=lower):
-                node.add_edge(lower, 'lower')
+        for lnode in node.get_lowers():
+            if lnode not in node.get_edge_cnodes():
+                node.add_edge(lnode, 'child')
 
     for i, node in enumerate(graph.get_node_list(lambda x : x.num_highers())):
         for higher in node.get_highers():
-            # if node not in higher.get_edge_nodes() and not higher.can_reach(node, []):
-            if node not in higher.get_edge_nodes() and not higher.can_reach2(node, remove_node=node):
+            if node not in higher.get_edge_cnodes() and not higher.is_connected(node, visited_nodes=[]):
                 higher.add_edge(node, 'higher')
                 reconstruct_list = []
-                for parent, edge_type in node.get_edge_parents():
-                    if parent.has_edge(node, ['lower', 'child']) and parent.is_connected(node, ['higher']):
-                        reconstruct_list.append(parent)
+                for cnode, pnode, edge_type in node.get_parent_edges():
+                    if pnode.has_edge(node, ['child']) and pnode.is_connected(node, visited_nodes=[higher], target_edge_types=['child']):
+                        reconstruct_list.append(pnode)
                 for reconstruct in reconstruct_list:
-                    reconstruct.remove_edge(node, 'lower')
+                    reconstruct.remove_edge(node, 'child')
                     higher.remove_edge(node, 'higher')
-                    # higher.add_edge(node, 'new')
                     if not higher.has_edge(node, 'new'):
                         higher.add_edge(node, 'new')
-                    print(node, higher, reconstruct)
+
+    changed = True
+    while changed:
+        changed = False
+        for i, node in enumerate(graph.get_node_list()):
+            all_edges = node.get_edges()
+            j = 0
+            while j < len(all_edges):
+                pnode, cnode, edge_type = all_edges[j]
+                if node.is_connected(cnode, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['child', 'new']):
+                    all_edges.remove(all_edges[j])
+                    changed = True
+                else:
+                    j += 1
 
     return graph
 
@@ -248,8 +256,8 @@ def draw_graph(graph):
         DG.add_node(node.name, name=node.name)
 
     for i, node in enumerate(graph.get_node_list()):
-        for edge_node, edge_type in node.get_edges():
-            DG.add_edge(node.name, edge_node.name, edge_type=edge_type)
+        for pnode, cnode, edge_type in node.get_edges():
+            DG.add_edge(node.name, cnode.name, edge_type=edge_type)
 
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
@@ -262,10 +270,10 @@ def draw_graph(graph):
         print(e)
         # pos = nx.kamada_kawai_layout(DG)
         # pos = nx.spiral_layout(DG)
-        pos = nx.random_layout(DG)
+        # pos = nx.random_layout(DG)
+        pos = nx.shell_layout(DG)
         nx.draw_networkx_nodes(DG, pos=pos)
     
-
     for edge_type, style, color in EDGE_STYLES:
         edges = [(u, v) for (u, v, d) in edgelist if d["edge_type"] == edge_type]
         nx.draw_networkx_edges(DG, pos=pos, edgelist=edges, style=style, edge_color=color, connectionstyle='arc3, rad={}'.format(0.05)) # random.uniform(0.05, 0.2)
@@ -286,11 +294,10 @@ GRAPH_WIDTH = 8
 FONT_SIZE = 8
 EDGE_COLOR = "green"
 
-CHILD = True
+CHILD = False
 
 EDGE_STYLES = [
     ('child', 'solid', 'red'), 
-    ('lower', 'dashed', 'green'), 
     ('higher', 'dashed', 'blue'),
     ('new', 'dashed', 'black')
     ]
@@ -298,23 +305,6 @@ EDGE_STYLES = [
 # plot_list = ["13-1", "17-2", "09-1"]
 # plot_list = ["07-1", "13-1", "15-2"]
 # plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
-
-# plot_list = ['03-1', '07-1', '25-2']
-# plot_list = ['16-2', '19-1', '10-2']
-# plot_list = ['05-1']
-# plot_list = ['05-1', '17-1']
-# plot_list = ['17-1']
-
-# plot_list = ['08-2', '18-1', '03-1']
-# plot_list = ['08-2', '20-1', '06-1']
-
-# plot_list = ['23-1', '18-1', '10-1', '11-2', '13-1', '15-1', '23-2', '08-2', '05-2', '11-1', '24-2', '08-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
-# plot_list = ['10-1', '21-1', '26-2', '24-2']
-
-# plot_list = ['10-1', '11-2', '13-1', '15-1', '23-2', '08-2', '05-2', '11-1', '24-2', '08-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
-# plot_list = ['04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
-# plot_list = ['12-2', '21-1']
-# plot_list = ['12-2', '18-1']
 
 # WORST
 # plot_list = ['18-1', '26-2', '26-1']
