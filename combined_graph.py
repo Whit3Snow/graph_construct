@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from graph import *
+from pos import *
 import random
 import individual_graph
 
@@ -32,129 +33,6 @@ def get_action_list(annotation_file):
     refined_actions.append("done")
 
     return refined_actions
-
-def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=5):
-    # From https://stackoverflow.com/questions/29586520/can-one-get-hierarchical-graphs-from-networkx-with-python-3/29597209#29597209
-    if root is None:
-        if isinstance(G, nx.DiGraph):
-            root = next(iter(nx.topological_sort(G)))
-        else:
-            root = random.choice(list(G.nodes))
-
-    def _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter, pos=None, parent=None, done=[]):
-        if pos is None:
-            pos = {root:(xcenter, vert_loc)}
-        else:
-            pos[root] = (xcenter, vert_loc)
-        children = list(G.neighbors(root))
-        rem_children = _remaining_children(children, done)
-        if len(rem_children) != 0:
-            dx = width/len(rem_children) 
-            nextx = xcenter - width/2 - dx/2
-            for child in rem_children:
-                nextx += dx
-                done.append(child)
-                pos = _hierarchy_pos(G, child, width=width, vert_gap=1, 
-                                    vert_loc=vert_loc-vert_gap, xcenter=nextx,
-                                    pos=pos, parent=root, done=done)
-        return pos
-
-    def _remaining_children(children, done):
-        return [c for c in children if c not in done]
-
-    # levels = _make_levels({}, root)
-    return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
-
-def hierarchy_pos_2(G, root=None, levels=None, width=1., height=1.):
-    # from https://stackoverflow.com/questions/29586520/can-one-get-hierarchical-graphs-from-networkx-with-python-3/29597209#29597209
-
-    def make_levels(levels, node, currentLevel=0, parent=None, done=[]):
-        if not currentLevel in levels:
-            levels[currentLevel] = {"total" : 0, "current" : 0}
-        levels[currentLevel]["total"] += 1
-        neighbors = list(G.neighbors(node))
-        rem_neighbors = remaining_neighbors(neighbors, done)
-        for neighbor in rem_neighbors:
-            if not neighbor == parent:
-                done.append(neighbor)
-                levels =  make_levels(levels, neighbor, currentLevel + 1, node, done)
-        return levels
-
-    def make_pos(pos, node, currentLevel=0, parent=None, vert_loc=0, done=[]):
-        dx = 1/levels[currentLevel]["total"]
-        left = dx/2
-        pos[node] = ((left + dx*levels[currentLevel]["current"])*width, vert_loc)
-        levels[currentLevel]["current"] += 1
-        neighbors = list(G.neighbors(node))
-        rem_neighbors = remaining_neighbors(neighbors, done)
-        for neighbor in rem_neighbors:
-            if not neighbor == parent:
-                done.append(neighbor)
-                pos = make_pos(pos, neighbor, currentLevel + 1, node, vert_loc-vert_gap)
-        return pos
-
-    def remaining_neighbors(neighbors, done):
-        return [n for n in neighbors if n not in done]
-
-    if root is None:
-        if isinstance(G, nx.DiGraph):
-            root = next(iter(nx.topological_sort(G)))
-        else:
-            root = random.choice(list(G.nodes))
-
-    if levels is None:
-        levels = make_levels({}, root)
-    else:
-        levels = {l:{"total": levels[l], "current": 0} for l in levels}
-
-    vert_gap = height / (max([l for l in levels])+1)
-    return make_pos({}, root)
-
-
-def hierarchy_pos_3(G, root):
-
-    def remaining_neighbors(neighbors):
-        return [n for n in neighbors if n not in list(done.keys())]
-    
-    node_list = [root]
-    done = {}
-    done[root] = 0
-    level = {}
-    level[0] = [1, 0]
-
-    for node in node_list:
-        cur_level = done[node]
-        child_nodes = list(G.neighbors(node))
-        child_nodes = sorted(child_nodes, key=lambda x : -len(list(G.neighbors(x))))
-        cur_child_cnt = -1
-        cur_child_level = cur_level
-        for child in remaining_neighbors(child_nodes):
-            child_cnt = len(list(G.neighbors(child)))
-            if cur_child_cnt < 0 or cur_child_cnt != child_cnt:
-                cur_child_cnt = child_cnt
-                cur_child_level += 1
-                if cur_child_level not in level:
-                    level[cur_child_level] = [0, 0]
-            done[child] = cur_child_level
-            level[cur_child_level][0] += 1
-            node_list.append(child)
-
-    max_level_cnt = max(list(level.values()))[0]
-    pos = {}
-    for node in done:
-        y = done[node]
-        level_cnt, idx = level[y]
-        if level_cnt == 1:
-            x = 0
-        else:
-            step = max_level_cnt/(level_cnt-1)
-            start = -max_level_cnt/2
-            end = max_level_cnt/2+1
-            float_range_array = list(np.arange(start, end, step))
-            x = float_range_array[idx]
-        level[y][1] += 1
-        pos[node] = (x, -y)
-    return pos
 
 
 def construct_graph(all_action_list):
@@ -249,13 +127,11 @@ def draw_graph(graph):
 
     try:
         # pos = nx.shell_layout(DG)
-        pos = hierarchy_pos_2(DG, 'done')
+        pos = hierarchy_pos_3(DG, 'done')
         nx.draw_networkx_nodes(DG, pos=pos)
     except Exception as e:
         print(e)
         # pos = nx.kamada_kawai_layout(DG)
-        # pos = nx.spiral_layout(DG)
-        # pos = nx.random_layout(DG)
         pos = nx.shell_layout(DG)
         nx.draw_networkx_nodes(DG, pos=pos)
     
@@ -291,17 +167,17 @@ EDGE_STYLES = [
 # plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
 # WORST
-# plot_list = ['18-1', '26-2', '26-1']
-plot_list = ['26-2', '26-1']
+plot_list = ['18-1', '26-2', '26-1']
+# plot_list = ['26-2', '26-1']
 
 # WHY BLACK IS ADDED
-#plot_list = ['26-2', '26-1', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
+# plot_list = ['26-2', '26-1', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
 
 # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
 # random.shuffle(plot_list)
 # plot_list = plot_list[:30]
 
-# individual_graph.main(plot_list)
+individual_graph.main(plot_list)
 
 print(plot_list)
 
