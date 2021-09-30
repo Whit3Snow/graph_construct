@@ -85,16 +85,17 @@ def hierarchy_pos_3(G, root=None, levels=None, width=1., height=1.):
             levels[currentLevel] = {"total" : 0, "current" : 0}
         levels[currentLevel]["total"] += 1
         neighbors = list(G.neighbors(node))
+        neighbors = sorted(neighbors)
         rem_neighbors = remaining_neighbors(neighbors, done)
         for neighbor in rem_neighbors:
-            if not neighbor == parent:
+            if neighbor != parent and neighbor not in done:
                 done.append(neighbor)
                 if [n for n in rem_neighbors if (n != neighbor) and (neighbor in list(G.neighbors(n)))]:
                     newLevel = 2
                 else:
                     newLevel = 1
-                levels =  make_levels(levels, neighbor, currentLevel+newLevel, node, done)
-        return levels
+                levels, done =  make_levels(levels, neighbor, currentLevel+newLevel, node, done)
+        return levels, done
 
     def make_pos(pos, node, currentLevel=0, parent=None, vert_loc=0, done=[]):
         dx = 1/levels[currentLevel]["total"]
@@ -102,16 +103,17 @@ def hierarchy_pos_3(G, root=None, levels=None, width=1., height=1.):
         pos[node] = ((left + dx*levels[currentLevel]["current"])*width, vert_loc)
         levels[currentLevel]["current"] += 1
         neighbors = list(G.neighbors(node))
+        neighbors = sorted(neighbors)
         rem_neighbors = remaining_neighbors(neighbors, done)
         for neighbor in rem_neighbors:
-            if not neighbor == parent:
+            if neighbor != parent and neighbor not in done:
                 done.append(neighbor)
                 if [n for n in rem_neighbors if (n != neighbor) and (neighbor in list(G.neighbors(n)))]:
                     newLevel = 2
                 else:
                     newLevel = 1
-                pos = make_pos(pos, neighbor, currentLevel+newLevel, node, vert_loc-vert_gap*newLevel)
-        return pos
+                pos, done = make_pos(pos, neighbor, currentLevel+newLevel, node, vert_loc-vert_gap*newLevel, done)
+        return pos, done
 
     def remaining_neighbors(neighbors, done):
         return [n for n in neighbors if n not in done]
@@ -123,12 +125,12 @@ def hierarchy_pos_3(G, root=None, levels=None, width=1., height=1.):
             root = random.choice(list(G.nodes))
 
     if levels is None:
-        levels = make_levels({}, root)
+        levels, _ = make_levels({}, root)
     else:
         levels = {l:{"total": levels[l], "current": 0} for l in levels}
 
     vert_gap = height / (max([l for l in levels])+1)
-    return make_pos({}, root)
+    return make_pos({}, root)[0]
 
 
 def hierarchy_pos_4(G, root):
