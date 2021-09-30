@@ -44,12 +44,16 @@ def get_node_pos(i, node_count):
     return (x, -y*2)
 
 def draw_graph(DG, idx, plot_file, node_list):
-    global node_count
+    global node_count, node_color
 
     for i, name in enumerate(node_list):
         if i == 0:
             name = "{}\n\n{}\n\n".format(plot_file, name)
         DG.add_node("{}_{}".format(idx, i), name=name, pos=get_node_pos(i, node_count))
+        if name == HIGHLIGHT_NODE:
+            node_color.append('tab:red')
+        else:
+            node_color.append('tab:blue')
 
     for i in range(len(node_list)-1):
         DG.add_edge("{}_{}".format(idx, i+1), "{}_{}".format(idx, i))
@@ -63,7 +67,9 @@ Hyper-parameters
 LABEL_ROTATION = 30
 GRAPH_WIDTH = 15
 FONT_SIZE = 8
+HIGHLIGHT_NODE = ''
 node_count = 0
+node_color = []
 plot_list = ["01-1", "02-1", "03-1"]
 
 def main(plot_list):
@@ -79,7 +85,7 @@ def main(plot_list):
 
     labels = nx.get_node_attributes(DG, 'name') 
     pos = nx.get_node_attributes(DG, 'pos') 
-    nx.draw(DG, pos=pos)
+    nx.draw(DG, pos=pos, node_color=node_color)
     description = nx.draw_networkx_labels(DG, pos=pos, labels=labels, font_size=FONT_SIZE)
     for node, t in description.items():
         t.set_rotation(LABEL_ROTATION)

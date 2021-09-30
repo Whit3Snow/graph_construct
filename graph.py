@@ -1,11 +1,13 @@
 class Node():
     def __init__(self, name):
         self.name = name
-        self.lower_nodes = []
+        self.lower_nodes = None
         self.higher_nodes = None
 
         self.edges = []
         self.parent_edges = []
+
+        self.optional = False
     
     def add_lower(self, obj):
         self.lower_nodes.append(obj)
@@ -82,6 +84,12 @@ class Node():
                 return True
         return False
 
+    def set_optional(self):
+        self.optional = True
+
+    def is_optional(self):
+        return self.optional
+
     def __str__(self):
         return self.name
 
@@ -101,6 +109,5 @@ class Graph():
     def is_empty(self):
         return len(self.nodes) == 0
 
-    def get_node_list(self, func=lambda x : x.num_lowers()):
-        # self.nodes = sorted(self.nodes, key=func)
+    def get_node_list(self):
         return self.nodes
