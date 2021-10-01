@@ -53,6 +53,8 @@ def construct_graph(all_action_list, action_set_path):
             else:
                 updated_lowers = [lower_node for lower_node in cur_node.get_lowers() if lower_node.name in action_list[:idx]]
                 cur_node.lower_nodes = updated_lowers
+                # removed_lowers = list(set(cur_node.lower_nodes)-set(updated_lowers))
+                # cur_node.lower_nodes = updated_lowers + [lower_node for lower_node in removed_lowers if lower_node in missing_nodes]
 
             # Higher nodes
             if cur_node.get_highers() == None:
@@ -229,7 +231,14 @@ plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10
 
 print(plot_list)
 
-all_action_list = [['AS','AP','MD','AD','SS','D'],['AS','MD','AD','SS','D'],['AP','MD','AD','SS','D'],['AD','SS','D'],['MD','AD','SS','D'],['MD','AS','MD','SS','AD','D']]
+all_action_list = [
+    ['AS','AP','MD','AD','SS','D'],
+    ['AS','MD','AD','SS','D'],
+    ['AP','MD','AD','SS','D'],
+    ['AD','SS','D'],
+    ['MD','AD','SS','D'],
+    ['MD','AS','MD','SS','AD','D']
+]
 
 graph_object = construct_graph(all_action_list, "data/50salads/actions.txt")
 graph_object = reconstruct_graph(graph_object)

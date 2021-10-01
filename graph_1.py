@@ -4,6 +4,7 @@ class Node():
     def __init__(self, name):
         self.name = name
         self.lower_nodes = None
+        self.rem_lower_nodes = []
         self.higher_nodes = None
 
         self.edges = []

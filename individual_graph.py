@@ -67,7 +67,7 @@ Hyper-parameters
 LABEL_ROTATION = 30
 GRAPH_WIDTH = 15
 FONT_SIZE = 8
-HIGHLIGHT_NODE = ''
+HIGHLIGHT_NODE = 'peel_cucumber'
 node_count = 0
 node_color = []
 plot_list = ["01-1", "02-1", "03-1"]
