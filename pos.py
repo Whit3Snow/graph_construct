@@ -208,3 +208,19 @@ def hierarchy_pos_50salads(G, root):
     pos['peel_cucumber'] = (2.6, -5)
 
     return pos
+
+    
+
+def hierarchy_pos_test(G, root):
+    pos = {}
+    pos['D'] = (0, 0)
+
+    pos['AD'] = (-1.25, -1)
+    pos['SS'] =  (1.7, -1)
+
+    pos['MD'] = (-1.25, -2)
+    
+    pos['AS'] = (-2, -3)
+    pos['AP'] = (-0.5, -3)
+
+    return pos
