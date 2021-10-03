@@ -51,7 +51,7 @@ class Node():
         random.shuffle(self.edges)
         return self.edges
 
-    def get_edge_cnodes(self):
+    def get_edge_c_nodes(self):
         return [edge for (_, edge, _) in self.edges]
 
     def get_parent_edges(self):
@@ -64,32 +64,40 @@ class Node():
     def num_highers(self):
         return len(self.higher_nodes)
 
-    def has_edge(self, tnode, target_edge_type):
-        for pnode, cnode, edge_type in self.edges:
-            if cnode == tnode and edge_type in target_edge_type:
+    def has_edge(self, t_node, target_edge_type):
+        for p_node, c_node, edge_type in self.edges:
+            if c_node == t_node and edge_type in target_edge_type:
                 return True
         return False
 
-    def remove_edge(self, tnode, target_edge_type):
+    def remove_edge(self, t_node, target_edge_type):
         for cur_edge in self.edges:
-            pnode, cnode, edge_type = cur_edge
-            if cnode == tnode and edge_type == target_edge_type:
+            p_node, c_node, edge_type = cur_edge
+            if c_node == t_node and edge_type == target_edge_type:
                 self.edges.remove(cur_edge)
+                c_node.remove_parent_edge(self, target_edge_type)
+                break
+                
+    def remove_parent_edge(self, t_node, target_edge_type):
+        for cur_edge in self.parent_edges:
+            c_node, p_node, edge_type = cur_edge
+            if p_node == t_node and edge_type == target_edge_type:
+                self.parent_edges.remove(cur_edge)
                 break
 
-    def is_connected(self, tnode, visited_nodes=[], ignored_edges=[], target_edge_types=[]):
-        if self == tnode:
+    def is_connected(self, t_node, visited_nodes=[], ignored_edges=[], target_edge_types=[]):
+        if self == t_node:
             return True
         for edge in self.edges:
-            pnode, cnode, edge_type = edge
+            p_node, c_node, edge_type = edge
             if edge in ignored_edges:
                 continue
             if len(target_edge_types) > 0 and edge_type not in target_edge_types:
                 continue
-            if cnode in visited_nodes:
+            if c_node in visited_nodes:
                 continue
-            visited_nodes.append(cnode)
-            if cnode.is_connected(tnode, visited_nodes, ignored_edges, target_edge_types):
+            visited_nodes.append(c_node)
+            if c_node.is_connected(t_node, visited_nodes, ignored_edges, target_edge_types):
                 return True
         return False
 

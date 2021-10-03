@@ -53,6 +53,8 @@ def construct_graph(all_action_list, action_set_path):
             else:
                 updated_lowers = [lower_node for lower_node in cur_node.get_lowers() if lower_node.name in action_list[:idx]]
                 cur_node.lower_nodes = updated_lowers
+                # removed_lowers = list(set(cur_node.lower_nodes)-set(updated_lowers))
+                # cur_node.lower_nodes = updated_lowers + [lower_node for lower_node in removed_lowers if lower_node in missing_nodes]
                 
             # Higher nodes
             if cur_node.get_highers() == None:
@@ -64,6 +66,8 @@ def construct_graph(all_action_list, action_set_path):
             else:
                 updated_highers = [higher_node for higher_node in cur_node.get_highers() if higher_node.name in action_list[idx+1:]]
                 cur_node.higher_nodes = updated_highers
+                # removed_highers = list(set(cur_node.higher_nodes)-set(updated_highers))
+                # cur_node.higher_nodes = updated_highers + [higher_node for higher_node in removed_highers if higher_node in missing_nodes]
 
     return graph
 
@@ -71,36 +75,112 @@ def construct_graph(all_action_list, action_set_path):
 def reconstruct_graph(graph):
     for i, node in enumerate(graph.get_node_list()):
         for lnode in node.get_lowers():
-            if lnode not in node.get_edge_cnodes():
+            if lnode not in node.get_edge_c_nodes():
                 node.add_edge(lnode, 'lower')
 
     for i, node in enumerate(graph.get_node_list()):
         for hnode in node.get_highers():
-            if hnode not in node.get_edge_cnodes():
+            if hnode not in node.get_edge_c_nodes():
                 hnode.add_edge(node, 'higher')
 
     changed = True
     while changed:
         changed = False
         for i, node in enumerate(graph.get_node_list()):
-            all_edges = node.get_edges()
+            all_edges = node.get_edges().copy()
             j = 0
             while j < len(all_edges):
-                _, cnode, edge_type = all_edges[j]
-                if node.is_connected(cnode, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['lower']):
+                _, c_node, edge_type = all_edges[j]
+                if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=[edge_type, 'lower']):
                     all_edges.remove(all_edges[j])
-                    node.remove_edge(cnode, edge_type)
+                    node.remove_edge(c_node, edge_type)
                     changed = True
-                    continue
-                if edge_type == 'higher':
-                    for _, cpnode, cedge_type in cnode.get_parent_edges():
-                        if cpnode == node:
-                            continue
-                        if cedge_type == 'higher' and cpnode.is_connected(node, visited_nodes=[], ignored_edges=[], target_edge_types=['lower']):
-                            cpnode.remove_edge(cnode, cedge_type)
-                
-                j += 1
+                else:
+                    j += 1
 
+    changed = True
+    while changed:
+        changed = False
+        for i, node in enumerate(graph.get_node_list()):
+            all_edges = node.get_edges().copy()
+            j = 0
+            while j < len(all_edges):
+                removed = False
+                _, c_node, edge_type = all_edges[j]
+                if edge_type == 'higher':
+                    black = len(node.get_parent_edges()) > 0
+                    for _, p_node, p_edge_type in node.get_parent_edges():
+                        if p_edge_type != 'lower' or (p_node, c_node, 'lower') not in p_node.get_edges():
+                            black = False
+                    if black:
+                        for _, p_node, p_edge_type in node.get_parent_edges():
+                            p_node.remove_edge(c_node, 'lower')
+                        node.remove_edge(c_node, 'higher')
+                        all_edges.pop(j)
+                        node.add_edge(c_node, 'new')
+                        all_edges.append((node, c_node, 'new'))
+                        removed = True
+                if removed:
+                    changed = True
+                else:
+                    j += 1
+                    
+    # changed = True
+    # while changed:
+    #     changed = False
+    #     for i, node in enumerate(graph.get_node_list()):
+    #         all_edges = node.get_edges().copy()
+    #         j = 0
+    #         while j < len(all_edges):
+    #             removed = False
+    #             _, c_node, edge_type = all_edges[j]
+    #             if edge_type == 'higher':
+    #                 for _, cp_node, c_edge_type in c_node.get_parent_edges():
+    #                     if cp_node == node:
+    #                         continue
+
+    #                     # red-blue-blue -> red-blue-X
+    #                     if c_edge_type == 'higher' and cp_node.is_connected(node, visited_nodes=[], ignored_edges=[], target_edge_types=['lower']):
+    #                     # if c_edge_type == 'higher' and (cp_node, node, 'lower') in cp_node.get_edges():
+    #                         cp_node.remove_edge(c_node, c_edge_type)
+
+    #                     # red-blue-red -> red-black
+    #                     if c_edge_type == 'lower' and (cp_node, node, 'lower') in cp_node.get_edges():
+    #                         cp_node.remove_edge(c_node, c_edge_type)
+    #                         if not removed:
+    #                             node.remove_edge(c_node, edge_type)
+    #                             all_edges.pop(j)
+    #                             node.add_edge(c_node, 'new')
+    #                             all_edges.append((node, c_node, 'new'))
+    #                             removed = True
+    #             if removed:
+    #                 changed = True
+    #             else:
+    #                 j += 1
+
+    # changed = True
+    # while changed:
+    #     changed = False
+    #     for i, node in enumerate(graph.get_node_list()):
+    #         all_edges = node.get_edges()
+    #         j = 0
+    #         while j < len(all_edges):
+    #             removed = False
+    #             _, c_node, edge_type = all_edges[j]
+    #             # elif edge_type == 'lower':
+    #             #     remove = len(node.get_parent_edges()) > 0
+    #             #     for _, p_node, p_edge_type in node.get_parent_edges():
+    #             #         if p_edge_type != 'higher' or (p_node, c_node, 'lower') not in p_node.get_edges():
+    #             #             remove = False
+    #             #     if remove:
+    #             #         remove_edges = [edge for edge in node.get_parent_edges() if edge[2] == 'higher']
+    #             #         for _, p_node, p_edge_type in remove_edges:
+    #             #             if p_edge_type == 'higher':
+    #             #                 p_node.remove_edge(c_node, 'lower')
+    #             #                 p_node.remove_edge(node, 'higher')
+    #             #                 p_node.add_edge(node, 'lower')
+    #             #                 node.set_optional()
+            
     return graph
 
 
@@ -120,8 +200,8 @@ def draw_graph(graph):
         node_color.append(color)
 
     for i, node in enumerate(graph.get_node_list()):
-        for pnode, cnode, edge_type in node.get_edges():
-            DG.add_edge(node.name, cnode.name, edge_type=edge_type)
+        for p_node, c_node, edge_type in node.get_edges():
+            DG.add_edge(node.name, c_node.name, edge_type=edge_type)
 
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
@@ -159,14 +239,17 @@ EDGE_COLOR = "green"
 
 EDGE_STYLES = [
     ('lower', 'solid', 'red'), 
-    ('higher', 'dashed', 'blue'),
-    ('new', 'dashed', 'black')
+    ('higher', 'solid', 'blue'),
+    ('new', 'dotted', 'black'),
+    ('lower!', 'dashed', 'green')
     ]
 
+# GOOD
 # plot_list = ["13-1", "17-2", "09-1"]
 # plot_list = ["07-1", "13-1", "15-2"]
 # plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
+# NOT DONE
 # plot_list = ['01-1', '04-2', '05-2']
 
 # WORST
@@ -175,9 +258,10 @@ EDGE_STYLES = [
 # plot_list = ['26-2', '26-1']
 
 # WHY BLACK IS ADDED
-plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
+# plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
 
 # plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '01-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
+plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
 
 # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
 # random.shuffle(plot_list)

@@ -82,19 +82,19 @@ def construct_graph(all_action_list, action_set_path):
 def reconstruct_graph(graph):
     for i, node in enumerate(graph.get_node_list()):
         for lnode in node.get_lowers():
-            if lnode not in node.get_edge_cnodes():
+            if lnode not in node.get_edge_c_nodes():
                 node.add_edge(lnode, 'lower')
 
     for i, node in enumerate(graph.get_node_list()):
         for higher in node.get_highers():
-            # if node not in higher.get_edge_cnodes() and not higher.is_connected(node, visited_nodes=[]):
-            if node not in higher.get_edge_cnodes():
+            # if node not in higher.get_edge_c_nodes() and not higher.is_connected(node, visited_nodes=[]):
+            if node not in higher.get_edge_c_nodes():
                 higher.add_edge(node, 'higher')
                 # # Black edges
                 # reconstruct_list = []
-                # for cnode, pnode, edge_type in node.get_parent_edges():
-                #     if pnode.has_edge(higher, ['lower']) and pnode.is_connected(node, visited_nodes=[higher], target_edge_types=['lower']):
-                #         reconstruct_list.append(pnode)
+                # for c_node, p_node, edge_type in node.get_parent_edges():
+                #     if p_node.has_edge(higher, ['lower']) and p_node.is_connected(node, visited_nodes=[higher], target_edge_types=['lower']):
+                #         reconstruct_list.append(p_node)
                 # for reconstruct in reconstruct_list:
                 #     reconstruct.remove_edge(node, 'lower')
                 #     higher.remove_edge(node, 'higher')
@@ -108,16 +108,16 @@ def reconstruct_graph(graph):
             all_edges = node.get_edges()
             j = 0
             while j < len(all_edges):
-                pnode, cnode, edge_type = all_edges[j]
-                if edge_type == 'lower' and node.is_connected(cnode, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['lower']):
+                p_node, c_node, edge_type = all_edges[j]
+                if edge_type == 'lower' and node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['lower']):
                     all_edges.remove(all_edges[j])
-                    node.remove_edge(cnode, edge_type)
-                    # node.add_edge(cnode, edge_type+'!')
+                    node.remove_edge(c_node, edge_type)
+                    # node.add_edge(c_node, edge_type+'!')
                     changed = True
-                # elif edge_type == 'new' and node.is_connected(cnode, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['lower']):
+                # elif edge_type == 'new' and node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['lower']):
                 #     all_edges.remove(all_edges[j])
-                #     node.remove_edge(cnode, edge_type)
-                #     node.add_edge(cnode, edge_type+'!')
+                #     node.remove_edge(c_node, edge_type)
+                #     node.add_edge(c_node, edge_type+'!')
                 #     changed = True
                 else:
                     j += 1
@@ -161,8 +161,8 @@ def draw_graph(graph):
         node_color.append(color)
 
     for i, node in enumerate(graph.get_node_list()):
-        for pnode, cnode, edge_type in node.get_edges():
-            DG.add_edge(node.name, cnode.name, edge_type=edge_type)
+        for p_node, c_node, edge_type in node.get_edges():
+            DG.add_edge(node.name, c_node.name, edge_type=edge_type)
 
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
