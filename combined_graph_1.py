@@ -89,14 +89,16 @@ def construct_graph(all_action_list, action_set_path):
 
 def reconstruct_graph(graph):
     for i, node in enumerate(graph.get_node_list()):
-        for l_node in node.get_lowers():
-            if l_node not in node.get_edge_c_nodes():
-                node.add_edge(l_node, 'lower')
+        if node.get_lowers():
+            for l_node in node.get_lowers():
+                if l_node not in node.get_edge_c_nodes():
+                    node.add_edge(l_node, 'lower')
 
     for i, node in enumerate(graph.get_node_list()):
-        for h_node in node.get_highers():
-            if h_node not in node.get_edge_c_nodes():
-                h_node.add_edge(node, 'higher')
+        if node.get_highers():
+            for h_node in node.get_highers():
+                if h_node not in node.get_edge_c_nodes():
+                    h_node.add_edge(node, 'higher')
 
     # draw_graph(graph)
     # input()
@@ -155,27 +157,26 @@ def reconstruct_graph(graph):
                         all_edges.append((node, c_node, 'new'))
                         removed = True
 
-                # optional nodes
-                if not removed:
-                    is_optional = len(node.get_parent_edges()) > 0
-                    for _, p_node, p_edge_type in node.get_parent_edges():
-                        if p_edge_type != 'higher':
-                            is_optional = False
-                            break
-                        for rc_node in node.get_required_nodes():
-                            if not p_node.requires(c_node):
-                                is_optional = False
-                                break
-                    if is_optional:
-                        changed = True
-                        remove_list = node.get_parent_edges().copy()
-                        node.set_optional()
-                        for _, p_node, p_edge_type in remove_list:
-                            p_node.remove_edge(node, 'higher')
-                            p_node.add_edge(node, 'new')
-
                 if not removed:
                     j += 1
+            
+            # optional nodes
+            is_optional = len(node.get_parent_edges()) > 0
+            for _, p_node, p_edge_type in node.get_parent_edges():
+                if p_edge_type != 'higher':
+                    is_optional = False
+                    break
+                for rc_node in node.get_required_nodes():
+                    if not p_node.requires(rc_node):
+                        is_optional = False
+                        break
+            if is_optional:
+                changed = True
+                remove_list = node.get_parent_edges().copy()
+                node.set_optional()
+                for _, p_node, p_edge_type in remove_list:
+                    p_node.remove_edge(node, 'higher')
+                    p_node.add_edge(node, 'new')
     
 
     for i, node in enumerate(graph.get_node_list()):
@@ -184,12 +185,30 @@ def reconstruct_graph(graph):
             _, c_node, c_edge_type = edge
             if node not in c_node.get_afters():
                 node.remove_edge(c_node, c_edge_type)
-                node.add_edge(c_node, c_edge_type+"!")
+                if c_edge_type == 'new':
+                    c_edge_type = 'lower'
+                node.add_edge(c_node, c_edge_type+'!')
+
 
     for i, node in enumerate(graph.get_node_list()):
         node.finalize_afters(graph.get_node_list())
         for a_node in node.get_afters():
             node.add_edge(a_node, 'after')
+
+    changed = True
+    while changed:
+        changed = False
+        for i, node in enumerate(graph.get_node_list()):
+            all_edges = node.get_edges().copy()
+            j = 0
+            while j < len(all_edges):
+                _, c_node, c_edge_type = all_edges[j]
+                if c_edge_type == 'after' and node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['after']):
+                    all_edges.remove(all_edges[j])
+                    node.remove_edge(c_node, c_edge_type)
+                    changed = True
+                else:
+                    j += 1
 
     # draw_graph(graph)
     # input()
@@ -260,51 +279,56 @@ FONT_SIZE = 8
 EDGE_COLOR = "green"
 
 EDGE_STYLES = [
-    ('lower', 'dotted', 'red'), 
-    ('higher', 'dotted', 'blue'),
-    ('new', 'dotted', 'black'),
+    ('lower', 'dashed', 'red'), 
+    ('higher', 'dashed', 'blue'),
+    ('new', 'dashed', 'black'),
     ('lower!', 'solid', 'red'), 
     ('higher!', 'solid', 'blue'),
     ('new!', 'solid', 'black'),
     ('after', 'dotted', 'green')
     ]
 
-# GOOD
-# plot_list = ["13-1", "17-2", "09-1"]
-# plot_list = ["07-1", "13-1", "15-2"]
-# plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
+if __name__ == "__main__":
+    # GOOD
+    # plot_list = ["13-1", "17-2", "09-1"]
+    # plot_list = ["07-1", "13-1", "15-2"]
+    # plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
-# NOT DONE
-# plot_list = ['01-1', '04-2', '05-2']
+    # NOT DONE
+    # plot_list = ['01-1', '04-2', '05-2']
 
-# WORST
-# plot_list = ['18-1', '26-2', '26-1']
-# plot_list = ['26-2', '26-1', '18-1']
-# plot_list = ['26-2', '26-1']
+    # WORST
+    # plot_list = ['18-1', '26-2', '26-1']
+    # plot_list = ['26-2', '26-1', '18-1']
+    # plot_list = ['26-2', '26-1']
 
-# WHY BLACK IS ADDED
-# plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
+    # WHY BLACK IS ADDED
+    # plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
 
-# plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '01-1', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
-# plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
+    # plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '01-1', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
+    # plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
 
-# plot_list = ['09-1', '14-1', '20-2', '06-1', '21-1', '01-1', '24-2', '02-2', '08-1', '04-1', '25-1', '07-1', '03-2', '13-2', '11-2', '19-1', '15-2', '05-2', '15-1', '18-2']
-plot_list = ['09-1', '14-1', '20-2', '06-1', '21-1', '24-2', '02-2', '08-1', '04-1', '25-1', '07-1', '03-2', '13-2', '11-2', '19-1', '15-2', '05-2', '15-1', '18-2']
+    # plot_list = ['09-1', '14-1', '20-2', '06-1', '21-1', '01-1', '24-2', '02-2', '08-1', '04-1', '25-1', '07-1', '03-2', '13-2', '11-2', '19-1', '15-2', '05-2', '15-1', '18-2']
+    # plot_list = ['09-1', '14-1', '20-2', '06-1', '21-1', '24-2', '02-2', '08-1', '04-1', '25-1', '07-1', '03-2', '13-2', '11-2', '19-1', '15-2', '05-2', '15-1', '18-2']
 
-# plot_list = ['01-1', '02-1', '17-2', '26-1', '03-2', '18-2', '01-2', '20-2', '09-2', '13-2', '25-1', '16-1', '22-2', '08-1', '15-1', '24-1', '20-1', '12-2', '21-1', '06-1']
+    # plot_list = ['18-1', '23-1', '25-2', '04-1', '06-1', '11-1', '09-2', '24-1', '26-1', '02-2', '19-2', '05-1', '27-2', '15-1', '10-2', '08-2', '18-2', '21-2', '20-2', '12-2']
+    # plot_list = ['01-1', '02-1', '17-2', '26-1', '03-2', '18-2', '01-2', '20-2', '09-2', '13-2', '25-1', '16-1', '22-2', '08-1', '15-1', '24-1', '20-1', '12-2', '21-1', '06-1']
+    # plot_list = ['27-1', '13-2', '15-1', '27-2', '16-2', '08-1', '22-1', '06-1', '16-1', '03-2', '07-2', '05-2', '09-2', '23-1', '05-1', '08-2', '14-2', '24-2', '03-1', '18-1']
+    # plot_list = ['09-1', '22-2', '25-1', '23-1', '08-1', '06-2', '10-2', '18-1', '21-2', '15-1', '01-2', '03-1', '04-2', '05-1', '16-1', '20-1', '17-2', '12-1', '14-2', '21-1']
+    plot_list = ['25-2', '03-2', '22-1', '12-2', '05-2', '27-1', '15-2', '10-1', '09-1', '12-1', '13-2', '04-2', '14-2', '18-1', '17-1', '08-1', '20-2', '19-2', '13-1', '21-2']
 
-# plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
-# random.shuffle(plot_list)
-# plot_list = plot_list[:20]
+    # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
+    # random.shuffle(plot_list)
+    # plot_list = plot_list[:20]
 
-# individual_graph.main(plot_list)
+    # individual_graph.main(plot_list)
 
-print(plot_list)
+    print(plot_list)
 
-all_action_list = []
-for idx, plot_file in enumerate(plot_list):
-    all_action_list.append(get_action_list("data/50salads/labels/{}-activityAnnotation.txt".format(plot_file)))
+    all_action_list = []
+    for idx, plot_file in enumerate(plot_list):
+        all_action_list.append(get_action_list("data/50salads/labels/{}-activityAnnotation.txt".format(plot_file)))
 
-graph_object = construct_graph(all_action_list, "data/50salads/actions.txt")
-graph_object = reconstruct_graph(graph_object)
-draw_graph(graph_object)
+    graph_object = construct_graph(all_action_list, "data/50salads/actions.txt")
+    graph_object = reconstruct_graph(graph_object)
+    draw_graph(graph_object)

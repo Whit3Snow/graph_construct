@@ -11,6 +11,10 @@ class Node():
         self.parent_edges = []
 
         self.optional = False
+
+        # For running
+        self.state = 0
+        self.executed = False
     
     def add_lower(self, obj):
         self.lower_nodes.append(obj)
@@ -50,6 +54,10 @@ class Node():
     def get_afters(self):
         if self.after_nodes:
             random.shuffle(self.after_nodes)
+        return self.after_nodes
+
+    def finalize_afters(self, all_nodes):
+        self.after_nodes = list(set(all_nodes)-set(self.get_afters())-set([self]))
         return self.after_nodes
 
     def get_edges(self):
@@ -102,6 +110,9 @@ class Node():
 
     def get_required_nodes(self):
         return [node for node in self.get_edge_c_nodes() if self.requires(node)]
+
+    def get_after_nodes(self):
+        return [node for _, node, edge_type in self.get_edges() if edge_type=='after']
 
     def requires(self, t_node):
         connected = self.is_connected(t_node, visited_nodes=[], target_edge_types=['lower', 'new'])
