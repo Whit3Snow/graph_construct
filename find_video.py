@@ -32,7 +32,7 @@ def get_action_list(annotation_file):
 plot_list = ['10-1', '11-2', '13-1', '15-1', '23-2', '08-2', '05-2', '11-1', '24-2', '08-1', '18-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '23-1', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '16-1', '24-1', '21-1', '27-1', '22-1']
 
 # target_actions = ['add_oil', 'add_vinegar', 'add_pepper', 'add_salt']
-target_actions = ['peel_cucumber']
+target_actions = ['cut_cucumber']
 
 found_list = []
 for idx, plot_file in enumerate(plot_list):

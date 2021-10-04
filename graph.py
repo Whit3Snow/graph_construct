@@ -111,6 +111,15 @@ class Node():
     def get_required_nodes(self):
         return [node for node in self.get_edge_c_nodes() if self.requires(node)]
 
+    def get_lower_nodes(self):
+        return [node for _, node, edge_type in self.get_edges() if edge_type=='lower']
+
+    def get_higher_parent_nodes(self):
+        return [node for node, _, edge_type in self.get_parent_edges() if edge_type=='higher' or edge_type=='new']
+
+    def get_mandatory_nodes(self):
+        return [node for _, node, edge_type in self.get_edges() if edge_type=='lower' or edge_type=='new']
+
     def get_after_nodes(self):
         return [node for _, node, edge_type in self.get_edges() if edge_type=='after']
 

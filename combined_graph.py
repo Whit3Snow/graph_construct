@@ -155,7 +155,7 @@ def reconstruct_graph(graph):
                 if p_edge_type != 'higher':
                     is_optional = False
                     break
-                for rc_node in node.get_required_nodes():
+                for rc_node in node.get_required_nodes(): # CHECK
                     if not p_node.requires(rc_node):
                         is_optional = False
                         break
@@ -321,4 +321,5 @@ if __name__ == "__main__":
     graph_object = reconstruct_graph(graph_object)
     draw_graph(graph_object)
 
-    graph_runner.run_graph(graph_object)
+    gr = graph_runner.GraphRunner(graph_object, all_action_list)
+    gr.run()
