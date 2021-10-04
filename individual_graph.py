@@ -50,8 +50,8 @@ def draw_graph(DG, idx, plot_file, node_list):
         if i == 0:
             name = "{}\n\n{}\n\n".format(plot_file, name)
         DG.add_node("{}_{}".format(idx, i), name=name, pos=get_node_pos(i, node_count))
-        if name in HIGHLIGHT_NODE:
-            node_color.append('tab:red')
+        if name in HIGHLIGHT_NODE.keys():
+            node_color.append(HIGHLIGHT_NODE[name])
         else:
             node_color.append('tab:blue')
 
@@ -67,7 +67,9 @@ Hyper-parameters
 LABEL_ROTATION = 30
 GRAPH_WIDTH = 15
 FONT_SIZE = 8
-HIGHLIGHT_NODE = ['place_lettuce_into_bowl', 'mix_ingredients']
+# HIGHLIGHT_NODE = {}
+HIGHLIGHT_NODE = {'place_cucumber_into_bowl': 'red', 'cut_cucumber': 'green'}
+# HIGHLIGHT_NODE = {'mix_dressing': 'red', 'add_salt': 'green'}
 node_count = 0
 node_color = []
 plot_list = ["01-1", "02-1", "03-1"]

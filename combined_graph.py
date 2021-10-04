@@ -52,8 +52,8 @@ def construct_graph(all_action_list, action_set_path):
                         cur_node.add_lower(lower_node)
             else:
                 updated_lowers = [lower_node for lower_node in cur_node.get_lowers() if lower_node.name in action_list[:idx]]
-                cur_node.lower_nodes = updated_lowers
-
+                cur_node.update_lower_nodes(updated_lowers)
+                
             # Higher nodes
             if cur_node.get_highers() == None:
                 cur_node.empty_highers()
@@ -64,67 +64,117 @@ def construct_graph(all_action_list, action_set_path):
             else:
                 updated_highers = [higher_node for higher_node in cur_node.get_highers() if higher_node.name in action_list[idx+1:]]
                 removed_highers = list(set(cur_node.higher_nodes)-set(updated_highers))
-                cur_node.higher_nodes = updated_highers + [higher_node for higher_node in removed_highers if higher_node in missing_nodes]
+                updated_highers += [higher_node for higher_node in removed_highers if higher_node in missing_nodes]
+                cur_node.update_higher_nodes(updated_highers)
+                
+            # After nodes
+            for after_name in action_list[:idx]:
+                after_node = graph.get_node(after_name)
+                if after_node not in cur_node.get_afters():
+                    cur_node.add_after(after_node)
 
         # Missing nodes in the first sequence
         if num == 0 and len(missing_nodes) > 0:
             existing_nodes = [graph.get_node(name) for name in list(set(action_list))]
-            for enode in existing_nodes:
-                for mnode in missing_nodes:
-                    enode.add_higher(mnode)
+            for e_node in existing_nodes:
+                for m_node in missing_nodes:
+                    # e_node.add_lower(m_node)
+                    e_node.add_higher(m_node)
 
     return graph
 
 
 def reconstruct_graph(graph):
     for i, node in enumerate(graph.get_node_list()):
-        for lnode in node.get_lowers():
-            if lnode not in node.get_edge_c_nodes():
-                node.add_edge(lnode, 'lower')
+        for l_node in node.get_lowers():
+            if l_node not in node.get_edge_c_nodes():
+                node.add_edge(l_node, 'lower')
 
     for i, node in enumerate(graph.get_node_list()):
-        for higher in node.get_highers():
-            if node not in higher.get_edge_c_nodes() and not higher.is_connected(node, visited_nodes=[]):
-                higher.add_edge(node, 'higher')
-                # Black edges
-                reconstruct_list = []
-                for c_node, p_node, edge_type in node.get_parent_edges():
-                    if p_node.has_edge(higher, ['lower']) and p_node.is_connected(node, visited_nodes=[higher], target_edge_types=['lower']):
-                        reconstruct_list.append(p_node)
-                for reconstruct in reconstruct_list:
-                    reconstruct.remove_edge(node, 'lower')
-                    higher.remove_edge(node, 'higher')
-                    if not higher.has_edge(node, 'new'):
-                        higher.add_edge(node, 'new')
+        for h_node in node.get_highers():
+            if h_node not in node.get_edge_c_nodes():
+                h_node.add_edge(node, 'higher')
 
     changed = True
     while changed:
         changed = False
         for i, node in enumerate(graph.get_node_list()):
-            all_edges = node.get_edges()
+            all_edges = node.get_edges().copy()
             j = 0
             while j < len(all_edges):
-                p_node, c_node, edge_type = all_edges[j]
-                if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['lower', 'new']):
+                _, c_node, c_edge_type = all_edges[j]
+                if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=[c_edge_type, 'lower']):
                     all_edges.remove(all_edges[j])
-                    node.remove_edge(c_node, edge_type)
+                    node.remove_edge(c_node, c_edge_type)
                     changed = True
                 else:
                     j += 1
+
+    changed = True
+    while changed:
+        changed = False
+        for i, node in enumerate(graph.get_node_list()):
+            all_edges = node.get_edges().copy()
+            j = 0
+            while j < len(all_edges):
+                removed = False
+                _, c_node, c_edge_type = all_edges[j]
+
+                # triangles
+                if not removed:
+                    if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=[c_edge_type, 'lower', 'new']):
+                        all_edges.remove(all_edges[j])
+                        node.remove_edge(c_node, c_edge_type)
+                        removed = True
+                        changed = True
+
+                # forced edges
+                if not removed:
+                    check_forced = len(node.get_parent_edges()) > 0
+                    for _, p_node, p_edge_type in node.get_parent_edges():
+                        if c_edge_type != 'higher' or p_edge_type == 'higher' or (p_node, c_node, 'lower') not in p_node.get_edges():
+                            check_forced = False
+                            break
+                    if check_forced:
+                        changed = True
+                        for _, p_node, p_edge_type in node.get_parent_edges():
+                            p_node.remove_edge(c_node, 'lower')
+                        node.remove_edge(c_node, 'higher')
+                        all_edges.pop(j)
+                        node.add_edge(c_node, 'new')
+                        all_edges.append((node, c_node, 'new'))
+                        removed = True
+
+                # optional nodes
+                if not removed:
+                    check_optional = len(node.get_parent_edges()) > 0
+                    for _, p_node, p_edge_type in node.get_parent_edges():
+                        if p_edge_type != 'higher':
+                            check_optional = False
+                            break
+                        for rc_node in node.get_required_nodes():
+                            if not p_node.requires(c_node):
+                                check_optional = False
+                                break
+                    if check_optional:
+                        changed = True
+                        remove_list = node.get_parent_edges().copy()
+                        node.set_optional()
+                        for _, p_node, p_edge_type in remove_list:
+                            p_node.remove_edge(node, 'higher')
+                            p_node.add_edge(node, 'new')
+
+                if not removed:
+                    j += 1
     
-    # Optional nodes
+
     for i, node in enumerate(graph.get_node_list()):
-        for _, c_node, edge_type in node.get_edges():
-            if edge_type == 'lower':
-                cnt = 0
-                for _, p_node, p_edge_type in node.get_parent_edges():
-                    if p_edge_type == 'higher' and (p_node, c_node, 'lower') in p_node.get_edges():
-                        cnt += 1
-                if cnt > 0 and cnt == len(node.get_parent_edges()):
-                    p_node.remove_edge(c_node, 'lower')
-                    p_node.remove_edge(node, 'higher')
-                    p_node.add_edge(node, 'lower')
-                    node.set_optional()
+        node_edges = node.get_edges().copy()
+        for edge in node_edges:
+            _, c_node, c_edge_type = edge
+            if node not in c_node.get_afters():
+                node.remove_edge(c_node, c_edge_type)
+                node.add_edge(c_node, c_edge_type+"!")
 
     return graph
 
@@ -183,16 +233,24 @@ FONT_SIZE = 8
 EDGE_COLOR = "green"
 
 EDGE_STYLES = [
-    ('lower', 'solid', 'red'), 
-    ('higher', 'dashed', 'blue'),
-    ('new', 'dashed', 'black')
+    ('lower', 'dotted', 'red'), 
+    ('higher', 'dotted', 'blue'),
+    ('new', 'dotted', 'black'),
+    ('lower!', 'solid', 'red'), 
+    ('higher!', 'solid', 'blue'),
+    ('new!', 'solid', 'black')
     ]
 
+# GOOD
 # plot_list = ["13-1", "17-2", "09-1"]
 # plot_list = ["07-1", "13-1", "15-2"]
 # plot_list = ["07-1", "13-1", "15-2", "13-1", "17-2", "09-1"]
 
-plot_list = ['01-1', '04-2', '05-2']
+# NOT DONE
+# plot_list = ['01-1', '04-2', '05-2']
+# plot_list = ['27-1', '06-2', '23-1', '19-1', '20-1', '25-2', '15-1', '01-1', '24-1', '12-1', '18-1', '01-2', '17-2', '04-2', '14-1', '25-1', '02-1', '15-2', '16-2', '03-2']
+# plot_list = ['22-2', '03-2', '14-2', '06-2', '23-1', '15-2', '04-2', '03-1', '21-2', '19-2', '14-1', '16-1', '07-1', '17-2', '20-2', '26-2', '09-1', '06-1', '21-1', '02-2']
+plot_list = ['13-2', '09-2', '21-2', '27-1', '23-2', '03-1', '10-1', '13-1', '15-1', '02-1', '19-2', '19-1', '23-1', '05-1', '08-1', '06-2', '24-2', '04-2', '22-2', '05-2']
 
 # WORST
 # plot_list = ['18-1', '26-2', '26-1']
@@ -202,11 +260,18 @@ plot_list = ['01-1', '04-2', '05-2']
 # WHY BLACK IS ADDED
 # plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
 
-# plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '01-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
+# plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '01-1', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
+# plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
+
+# plot_list = ['09-1', '14-1', '20-2', '06-1', '21-1', '01-1', '24-2', '02-2', '08-1', '04-1', '25-1', '07-1', '03-2', '13-2', '11-2', '19-1', '15-2', '05-2', '15-1', '18-2']
+# plot_list = ['09-1', '14-1', '20-2', '06-1', '21-1', '24-2', '02-2', '08-1', '04-1', '25-1', '07-1', '03-2', '13-2', '11-2', '19-1', '15-2', '05-2', '15-1', '18-2']
+
+# plot_list = ['01-1', '02-1', '17-2', '26-1', '03-2', '18-2', '01-2', '20-2', '09-2', '13-2', '25-1', '16-1', '22-2', '08-1', '15-1', '24-1', '20-1', '12-2', '21-1', '06-1']
+
 
 # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
 # random.shuffle(plot_list)
-# plot_list = plot_list[:30]
+# plot_list = plot_list[:20]
 
 # individual_graph.main(plot_list)
 
@@ -219,3 +284,16 @@ for idx, plot_file in enumerate(plot_list):
 graph_object = construct_graph(all_action_list, "data/50salads/actions.txt")
 graph_object = reconstruct_graph(graph_object)
 draw_graph(graph_object)
+
+"""
+Node explanation:
+A blue node can be PERFORMED if:
+    1. no solid-parent nodes are PERFORMED
+    2. all red-child nodes are COMPLETE
+    
+A blue node is COMPLETE if:
+    1. the node is PERFORMED
+    2. all red-child nodes are COMPLETE
+
+
+"""

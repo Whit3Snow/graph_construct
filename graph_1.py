@@ -4,8 +4,8 @@ class Node():
     def __init__(self, name):
         self.name = name
         self.lower_nodes = None
-        self.rem_lower_nodes = []
         self.higher_nodes = None
+        self.after_nodes = []
 
         self.edges = []
         self.parent_edges = []
@@ -17,6 +17,9 @@ class Node():
 
     def add_higher(self, obj):
         self.higher_nodes.append(obj)
+
+    def add_after(self, obj):
+        self.after_nodes.append(obj)
 
     def add_edge(self, obj, edge_type):
         self.edges.append((self, obj, edge_type))
@@ -46,6 +49,15 @@ class Node():
         if self.higher_nodes:
             random.shuffle(self.higher_nodes)
         return self.higher_nodes
+    
+    def get_afters(self):
+        if self.after_nodes:
+            random.shuffle(self.after_nodes)
+        return self.after_nodes
+
+    def finalize_afters(self, all_nodes):
+        self.after_nodes = list(set(all_nodes)-set(self.get_afters())-set([self]))
+        return self.after_nodes
 
     def get_edges(self):
         random.shuffle(self.edges)
@@ -64,24 +76,24 @@ class Node():
     def num_highers(self):
         return len(self.higher_nodes)
 
-    def has_edge(self, t_node, target_edge_type):
+    def has_edge(self, t_node, t_edge_type):
         for p_node, c_node, edge_type in self.edges:
-            if c_node == t_node and edge_type in target_edge_type:
+            if c_node == t_node and edge_type in t_edge_type:
                 return True
         return False
 
-    def remove_edge(self, t_node, target_edge_type):
+    def remove_edge(self, t_node, t_edge_type):
         for cur_edge in self.edges:
             p_node, c_node, edge_type = cur_edge
-            if c_node == t_node and edge_type == target_edge_type:
+            if c_node == t_node and edge_type == t_edge_type:
                 self.edges.remove(cur_edge)
-                c_node.remove_parent_edge(self, target_edge_type)
+                c_node.remove_parent_edge(self, t_edge_type)
                 break
                 
-    def remove_parent_edge(self, t_node, target_edge_type):
+    def remove_parent_edge(self, t_node, t_edge_type):
         for cur_edge in self.parent_edges:
             c_node, p_node, edge_type = cur_edge
-            if p_node == t_node and edge_type == target_edge_type:
+            if p_node == t_node and edge_type == t_edge_type:
                 self.parent_edges.remove(cur_edge)
                 break
 
@@ -106,6 +118,14 @@ class Node():
 
     def is_optional(self):
         return self.optional
+
+    def get_required_nodes(self):
+        return [node for node in self.get_edge_c_nodes() if self.requires(node)]
+
+    def requires(self, t_node):
+        connected = self.is_connected(t_node, visited_nodes=[], target_edge_types=['lower', 'new'])
+        optional = t_node.is_optional()
+        return connected and not optional
 
     def __str__(self):
         return self.name
