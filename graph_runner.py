@@ -24,59 +24,68 @@ A grey node is COMPLETE if:
 """
 
 class GraphRunner():
-    def __init__(self, graph, all_action_list):
+    def __init__(self, graph, action_list=None):
         self.orig_graph = graph
         self.graph = copy.deepcopy(graph)
-        self.all_action_list = all_action_list
-        self.cur_action_list_idx = 0
-        self.cur_action_list = all_action_list[self.cur_action_list_idx]
-        self.cur_action_idx = 0
+        self.action_list = action_list
+        self.action_idx = 0
+        self.action_log = []
+        self.test_video = action_list != None
 
-    def reset(self):
-        self.graph = copy.deepcopy(self.orig_graph)
-        self.cur_action_list_idx += 1
-        self.cur_action_idx = 0
+    def draw_graph(self):
+        if self.test_video:
+            return
+        from combined_graph import draw_graph
+        draw_graph(self.graph)
 
     def run(self):
-        from combined_graph import draw_graph
-        for action_list in self.all_action_list:
-            self.update_node_states()
-            runnable_nodes = self.get_runnable_nodes()
-            done_node = self.graph.get_node('done')
-            while not self.is_complete(done_node):
-                draw_graph(self.graph)
-                self.print_nodes(runnable_nodes)
-                choice = self.get_next_action()
-                choice_node = self.graph.get_node(choice)
-                self.execute_node(choice_node)
-                self.update_node_states()
-                runnable_nodes = self.get_runnable_nodes()
-            draw_graph(self.graph)
-            input('Next?')
-            self.reset()
+        self.update_node_states()
+        done_node = self.graph.get_node('done')
+        while not self.is_complete(done_node):
+            self.draw_graph()
+            self.show_executable_nodes()
+            next_action = self.get_next_action()
+            while not next_action:
+                next_action = self.get_next_action()
+            self.execute_node(next_action)
+            
+        self.draw_graph()
+        print('\nDone! Executed actions:')
+        for action in self.action_log:
+            print(action, end=', ')
 
     def print_nodes(self, nodes):
+        print("Executable nodes: ", end='')
         for node in nodes:
             print(node, end=', ')
         print()
 
     def get_next_action(self):
-        action = input()
-        # action = self.cur_action_list[self.cur_action_idx]
-        # self.cur_action_idx += 1
-        # print(action)
+        if self.test_video:
+            action = self.action_list[self.action_idx]
+            self.action_idx += 1
+            print("Node to execute: " + action)
+        else:
+            action = input("Node to execute: ")
+        action_node = self.graph.get_node(action)
 
-        return action
+        if not action_node:
+            return False
+        
+        if not self.is_executable(action_node):
+            print("Node {} is not executable!".format(action_node.name))
+            return False
+
+        self.action_log.append(action_node)
+        return action_node
 
     def execute_node(self, node):
-        if not self.is_executable(node):
-            print("Not executable! Current state of node {} is {}!".format(node.name, node.state))
-            return
-                
         node.executed = True
+        self.update_node_states()
 
-    def get_runnable_nodes(self):
-        return [node for node in self.graph.get_node_list() if self.is_executable(node)]
+    def show_executable_nodes(self):
+        executable_nodes = [node for node in self.graph.get_node_list() if self.is_executable(node)]
+        self.print_nodes(executable_nodes)
 
     def update_node_states(self):
         changed = True

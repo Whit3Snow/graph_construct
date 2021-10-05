@@ -90,19 +90,12 @@ def reconstruct_graph(graph):
     # Add all edges to lower nodes
     for i, node in enumerate(graph.get_node_list()):
         for l_node in node.get_lowers():
-            # if l_node not in node.get_edge_c_nodes():
-            #     node.add_edge(l_node, 'lower')
             node.add_edge(l_node, 'lower')
 
     # Add all edges to higher nodes
     for i, node in enumerate(graph.get_node_list()):
         for h_node in node.get_highers():
-            # if h_node not in node.get_edge_c_nodes():
-            #     h_node.add_edge(node, 'higher')
             h_node.add_edge(node, 'higher')
-
-    draw_graph(graph)
-    input()
 
     # Remove shortcut edges from triangles
     changed = True
@@ -119,10 +112,6 @@ def reconstruct_graph(graph):
                     changed = True
                 else:
                     j += 1
-
-    draw_graph(graph)
-    input()
-    graph1 = copy.deepcopy(graph)
 
     changed = True
     while changed:
@@ -179,14 +168,6 @@ def reconstruct_graph(graph):
                 for _, p_node, p_edge_type in remove_list:
                     p_node.remove_edge(node, 'higher')
                     p_node.add_edge(node, 'new')
-                    
-    draw_graph(graph)
-    input()
-    draw_graph(graph1)
-    input()
-    draw_graph(graph)
-    input()
-    
 
     for i, node in enumerate(graph.get_node_list()):
         node_edges = node.get_edges().copy()
@@ -239,15 +220,7 @@ def draw_graph(graph):
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
 
-    try:
-        # pos = nx.shell_layout(DG)
-        pos = hierarchy_pos_50salads(DG, 'done')
-        # nx.draw_networkx_nodes(DG, pos=pos, node_color=node_color)
-    except Exception as e:
-        print(e)
-        # pos = nx.kamada_kawai_layout(DG)
-        pos = nx.shell_layout(DG)
-        # nx.draw_networkx_nodes(DG, pos=pos)
+    pos = hierarchy_pos_50salads(DG, 'done')
     
     for optional, shape in NODE_SHAPES:
         nodes = [n for (n, d) in nodelist if d["is_optional"] == optional]
@@ -276,7 +249,7 @@ EDGE_COLOR = "green"
 
 EDGE_STYLES = [
     ('lower', 'solid', 'red'), 
-    ('higher', 'solid', 'blue'),
+    ('higher', 'dashed', 'blue'),
     ('new', 'solid', 'black'),
     ('after', 'dotted', 'green')
 ]
@@ -311,7 +284,7 @@ if __name__ == "__main__":
     # plot_list = ['26-2', '26-1']
 
     # WHY BLACK IS ADDED
-    # plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
+    plot_list = ['26-2', '26-1', '04-2', '16-1', '12-2', '07-2', '07-1', '13-2', '06-2', '16-2', '12-1', '11-1', '26-2', '04-1', '26-1', '14-2', '03-1', '24-1', '21-1', '27-1', '22-1']
 
     # plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '01-1', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
     # plot_list = ['25-1', '20-1', '06-1', '20-2', '16-2', '08-2', '01-2', '18-1', '10-1', '05-2', '07-2', '12-1', '02-2', '13-1', '23-2', '15-1', '09-1', '07-1', '22-1', '04-2', '14-1', '27-1', '02-1', '12-2', '13-2', '10-2', '17-2', '05-1', '27-2']
@@ -325,7 +298,7 @@ if __name__ == "__main__":
     # plot_list = ['09-1', '22-2', '25-1', '23-1', '08-1', '06-2', '10-2', '18-1', '21-2', '15-1', '01-2', '03-1', '04-2', '05-1', '16-1', '20-1', '17-2', '12-1', '14-2', '21-1']
     # plot_list = ['25-2', '03-2', '22-1', '12-2', '05-2', '27-1', '15-2', '10-1', '09-1', '12-1', '13-2', '04-2', '14-2', '18-1', '17-1', '08-1', '20-2', '19-2', '13-1', '21-2']
     # plot_list = ['09-1', '16-2', '07-2', '24-1', '06-1', '01-2', '09-2', '18-2', '20-1', '25-2', '16-1', '19-1', '10-2', '18-1', '04-2', '21-2', '26-1', '11-2', '25-1', '26-2']
-    plot_list = ['17-1', '17-2', '09-2', '03-1', '01-1', '08-2', '11-1', '15-2', '10-1', '26-2', '16-2', '22-1', '12-2', '20-1', '12-1', '19-2', '26-1', '02-1', '06-2', '04-1']
+    # plot_list = ['17-1', '17-2', '09-2', '03-1', '01-1', '08-2', '11-1', '15-2', '10-1', '26-2', '16-2', '22-1', '12-2', '20-1', '12-1', '19-2', '26-1', '02-1', '06-2', '04-1']
 
     # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
     # random.shuffle(plot_list)
@@ -343,5 +316,11 @@ if __name__ == "__main__":
     graph_object = reconstruct_graph(graph_object)
     draw_graph(graph_object)
 
-    gr = graph_runner.GraphRunner(graph_object, all_action_list)
+    # To test with user inputted actions
+    gr = graph_runner.GraphRunner(graph_object)
     gr.run()
+
+    # To test videos used to create the graph
+    # for action_list in all_action_list:
+    #     gr = graph_runner.GraphRunner(graph_object, action_list)
+    #     gr.run()
