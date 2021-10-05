@@ -44,14 +44,14 @@ class GraphRunner():
             runnable_nodes = self.get_runnable_nodes()
             done_node = self.graph.get_node('done')
             while not self.is_complete(done_node):
-                # draw_graph(self.graph)
+                draw_graph(self.graph)
                 self.print_nodes(runnable_nodes)
                 choice = self.get_next_action()
                 choice_node = self.graph.get_node(choice)
                 self.execute_node(choice_node)
                 self.update_node_states()
                 runnable_nodes = self.get_runnable_nodes()
-            # draw_graph(self.graph)
+            draw_graph(self.graph)
             input('Next?')
             self.reset()
 
@@ -61,10 +61,10 @@ class GraphRunner():
         print()
 
     def get_next_action(self):
-        # action = input()
-        action = self.cur_action_list[self.cur_action_idx]
-        self.cur_action_idx += 1
-        print(action)
+        action = input()
+        # action = self.cur_action_list[self.cur_action_idx]
+        # self.cur_action_idx += 1
+        # print(action)
 
         return action
 

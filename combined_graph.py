@@ -7,6 +7,7 @@ from pos import *
 import graph_runner
 import random
 import individual_graph
+import copy
 
 high_level_nodes = ["cut_and_mix_ingredients", "prepare_dressing", "serve_salad"]
 
@@ -86,16 +87,24 @@ def construct_graph(all_action_list, action_set_path):
 
 
 def reconstruct_graph(graph):
+    # Add all edges to lower nodes
     for i, node in enumerate(graph.get_node_list()):
         for l_node in node.get_lowers():
-            if l_node not in node.get_edge_c_nodes():
-                node.add_edge(l_node, 'lower')
+            # if l_node not in node.get_edge_c_nodes():
+            #     node.add_edge(l_node, 'lower')
+            node.add_edge(l_node, 'lower')
 
+    # Add all edges to higher nodes
     for i, node in enumerate(graph.get_node_list()):
         for h_node in node.get_highers():
-            if h_node not in node.get_edge_c_nodes():
-                h_node.add_edge(node, 'higher')
+            # if h_node not in node.get_edge_c_nodes():
+            #     h_node.add_edge(node, 'higher')
+            h_node.add_edge(node, 'higher')
 
+    draw_graph(graph)
+    input()
+
+    # Remove shortcut edges from triangles
     changed = True
     while changed:
         changed = False
@@ -104,12 +113,16 @@ def reconstruct_graph(graph):
             j = 0
             while j < len(all_edges):
                 _, c_node, c_edge_type = all_edges[j]
-                if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=[c_edge_type, 'lower']):
+                if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=[c_edge_type]):
                     all_edges.remove(all_edges[j])
                     node.remove_edge(c_node, c_edge_type)
                     changed = True
                 else:
                     j += 1
+
+    draw_graph(graph)
+    input()
+    graph1 = copy.deepcopy(graph)
 
     changed = True
     while changed:
@@ -121,7 +134,7 @@ def reconstruct_graph(graph):
                 removed = False
                 _, c_node, c_edge_type = all_edges[j]
 
-                # triangles
+                # Remove shortcut edges from triangles
                 if not removed:
                     if node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=[c_edge_type, 'lower', 'new']):
                         all_edges.remove(all_edges[j])
@@ -166,6 +179,13 @@ def reconstruct_graph(graph):
                 for _, p_node, p_edge_type in remove_list:
                     p_node.remove_edge(node, 'higher')
                     p_node.add_edge(node, 'new')
+                    
+    draw_graph(graph)
+    input()
+    draw_graph(graph1)
+    input()
+    draw_graph(graph)
+    input()
     
 
     for i, node in enumerate(graph.get_node_list()):
@@ -303,7 +323,9 @@ if __name__ == "__main__":
     # plot_list = ['01-1', '02-1', '17-2', '26-1', '03-2', '18-2', '01-2', '20-2', '09-2', '13-2', '25-1', '16-1', '22-2', '08-1', '15-1', '24-1', '20-1', '12-2', '21-1', '06-1']
     # plot_list = ['27-1', '13-2', '15-1', '27-2', '16-2', '08-1', '22-1', '06-1', '16-1', '03-2', '07-2', '05-2', '09-2', '23-1', '05-1', '08-2', '14-2', '24-2', '03-1', '18-1']
     # plot_list = ['09-1', '22-2', '25-1', '23-1', '08-1', '06-2', '10-2', '18-1', '21-2', '15-1', '01-2', '03-1', '04-2', '05-1', '16-1', '20-1', '17-2', '12-1', '14-2', '21-1']
-    plot_list = ['25-2', '03-2', '22-1', '12-2', '05-2', '27-1', '15-2', '10-1', '09-1', '12-1', '13-2', '04-2', '14-2', '18-1', '17-1', '08-1', '20-2', '19-2', '13-1', '21-2']
+    # plot_list = ['25-2', '03-2', '22-1', '12-2', '05-2', '27-1', '15-2', '10-1', '09-1', '12-1', '13-2', '04-2', '14-2', '18-1', '17-1', '08-1', '20-2', '19-2', '13-1', '21-2']
+    # plot_list = ['09-1', '16-2', '07-2', '24-1', '06-1', '01-2', '09-2', '18-2', '20-1', '25-2', '16-1', '19-1', '10-2', '18-1', '04-2', '21-2', '26-1', '11-2', '25-1', '26-2']
+    plot_list = ['17-1', '17-2', '09-2', '03-1', '01-1', '08-2', '11-1', '15-2', '10-1', '26-2', '16-2', '22-1', '12-2', '20-1', '12-1', '19-2', '26-1', '02-1', '06-2', '04-1']
 
     # plot_list = ["{:02}-{}".format(i, j) for i in range(1,28) for j in [1, 2]]
     # random.shuffle(plot_list)
