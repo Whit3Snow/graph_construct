@@ -46,6 +46,7 @@ def construct_graph(all_action_list, action_set_path):
         cur_node = Node(action)
         graph.add_node(cur_node)
 
+    #for front
     for num, action_list in enumerate(all_action_list):
         exist = []
         for idx, name in enumerate(action_list):
@@ -56,12 +57,33 @@ def construct_graph(all_action_list, action_set_path):
 
             if rep == True:
                 continue
+
             cur_node = graph.get_node(name)
             # Lower nodes
             for lower_name in action_list[:idx]:
                 exist.append(name)
                 # cur_node.rep = True
                 cur_node.add_lower(lower_name)
+
+    # #for last
+    # for num, action_list in enumerate(all_action_list):
+    #     exist = []
+    #     for idx, name in enumerate(action_list):
+    #         rep = False
+    #         for r_name in exist:
+    #             if name == r_name:
+    #                 rep = True
+
+    #         cur_node = graph.get_node(name)
+    #         if rep == True:
+    #             cur_node.empty_lower_nums()
+    #             continue
+            
+    #         # Lower nodes
+    #         for lower_name in action_list[:idx]:
+    #             exist.append(name)
+    #             # cur_node.rep = True
+    #             cur_node.add_lower(lower_name)
 
     # extract the lower nodes        
     for i, node in enumerate(graph.get_node_list()):

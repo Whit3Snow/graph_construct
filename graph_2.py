@@ -20,6 +20,13 @@ class Node():
     def add_lower(self, obj):
         self.lower_nums[obj] += 1
 
+    def empty_lower_nums(self):
+        
+        self.lower_nums = {'add_dressing':0, 'serve_salad_onto_plate':0, 'mix_dressing' : 0, 'mix_ingredients': 0,
+            'add_salt':0, 'add_pepper': 0, 'place_lettuce_into_bowl':0, 'place_cheese_into_bowl':0, 'place_tomato_into_bowl': 0, 'place_cucumber_into_bowl' : 0,
+            'add_vinegar':0, 'add_oil':0, 'cut_lettuce':0, 'cut_cheese':0, 'cut_tomato': 0, 'cut_cucumber': 0,
+            'peel_cucumber':0 }
+        
 
     def add_lower_list(self, obj):
         self.lower_nodes.append(obj)
