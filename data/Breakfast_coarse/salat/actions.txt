@@ -1,0 +1,8 @@
+cut_fruit
+peel_fruit
+put_fruit2bowl
+stir_fruit
+take_bowl
+take_knife
+take_plate
+done

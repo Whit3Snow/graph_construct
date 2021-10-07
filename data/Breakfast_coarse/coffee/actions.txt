@@ -1,0 +1,7 @@
+pour_coffee
+pour_milk
+pour_sugar
+spoon_sugar
+stir_coffee
+take_cup
+done

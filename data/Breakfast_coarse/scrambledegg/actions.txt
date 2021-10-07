@@ -1,0 +1,12 @@
+add_saltnpepper
+butter_pan
+crack_egg
+pour_egg2pan
+pour_oil
+put_egg2plate
+stir_egg
+stirfry_egg
+take_bowl
+take_eggs
+take_plate
+done

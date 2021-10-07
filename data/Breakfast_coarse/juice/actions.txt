@@ -1,0 +1,8 @@
+cut_orange
+pour_juice
+squeeze_orange
+take_glass
+take_knife
+take_plate
+take_squeezer
+done

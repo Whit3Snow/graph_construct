@@ -4,7 +4,7 @@ import random
 
 # From https://stackoverflow.com/questions/29586520/can-one-get-hierarchical-graphs-from-networkx-with-python-3/29597209#29597209
 
-def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=5):
+def hierarchy_pos_1(G, root='done', width=5., vert_gap=2., vert_loc=0, xcenter=5):
     if root is None:
         if isinstance(G, nx.DiGraph):
             root = next(iter(nx.topological_sort(G)))
@@ -35,7 +35,7 @@ def hierarchy_pos_1(G, root=None, width=5., vert_gap=2., vert_loc=0, xcenter=5):
     return hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
 
 
-def hierarchy_pos_2(G, root=None, levels=None, width=1., height=1.):
+def hierarchy_pos_2(G, root='done', levels=None, width=1., height=1.):
     def make_levels(levels, node, currentLevel=0, parent=None, done=[]):
         if not currentLevel in levels:
             levels[currentLevel] = {"total" : 0, "current" : 0}
@@ -79,7 +79,7 @@ def hierarchy_pos_2(G, root=None, levels=None, width=1., height=1.):
     return make_pos({}, root)
 
 
-def hierarchy_pos_3(G, root=None, levels=None, width=1., height=1.):
+def hierarchy_pos_3(G, root='done', levels=None, width=1., height=1.):
     def make_levels(levels, node, currentLevel=0, parent=None, done=[]):
         if not currentLevel in levels:
             levels[currentLevel] = {"total" : 0, "current" : 0}
@@ -133,7 +133,7 @@ def hierarchy_pos_3(G, root=None, levels=None, width=1., height=1.):
     return make_pos({}, root)[0]
 
 
-def hierarchy_pos_4(G, root):
+def hierarchy_pos_4(G, root='done'):
 
     def remaining_neighbors(neighbors):
         return [n for n in neighbors if n not in list(done.keys())]
@@ -175,11 +175,11 @@ def hierarchy_pos_4(G, root):
             float_range_array = list(np.arange(start, end, step))
             x = float_range_array[idx]
         level[y][1] += 1
-        pos[node] = (x, -y)
+        pos[node] = (x, -y*max_level_cnt/4)
     return pos
 
 
-def hierarchy_pos_50salads(G, root):
+def hierarchy_pos_50salads(G):
     pos = {}
     pos['done'] = (0, 0)
 
@@ -206,21 +206,5 @@ def hierarchy_pos_50salads(G, root):
     pos['place_cucumber_into_bowl'] = (3.0, -3)
     pos['cut_cucumber'] = (3.0, -4)
     pos['peel_cucumber'] = (2.6, -5)
-
-    return pos
-
-    
-
-def hierarchy_pos_test(G, root):
-    pos = {}
-    pos['D'] = (0, 0)
-
-    pos['AD'] = (-1.25, -1)
-    pos['SS'] =  (1.7, -1)
-
-    pos['MD'] = (-1.25, -2)
-    
-    pos['AS'] = (-2, -3)
-    pos['AP'] = (-0.5, -3)
 
     return pos

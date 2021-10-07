@@ -1,0 +1,14 @@
+butter_pan
+crack_egg
+fry_pancake
+pour_dough2pan
+pour_flour
+pour_milk
+pour_oil
+put_pancake2plate
+spoon_flour
+stir_dough
+take_bowl
+take_eggs
+take_plate
+done
