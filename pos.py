@@ -4,7 +4,7 @@ import random
 
 # From https://stackoverflow.com/questions/29586520/can-one-get-hierarchical-graphs-from-networkx-with-python-3/29597209#29597209
 
-def hierarchy_pos_1(G, root='done', width=5., vert_gap=2., vert_loc=0, xcenter=5):
+def hierarchy_pos_1(G, root='end', width=5., vert_gap=2., vert_loc=0, xcenter=5):
     if root is None:
         if isinstance(G, nx.DiGraph):
             root = next(iter(nx.topological_sort(G)))
@@ -35,7 +35,7 @@ def hierarchy_pos_1(G, root='done', width=5., vert_gap=2., vert_loc=0, xcenter=5
     return hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
 
 
-def hierarchy_pos_2(G, root='done', levels=None, width=1., height=1.):
+def hierarchy_pos_2(G, root='end', levels=None, width=1., height=1.):
     def make_levels(levels, node, currentLevel=0, parent=None, done=[]):
         if not currentLevel in levels:
             levels[currentLevel] = {"total" : 0, "current" : 0}
@@ -79,7 +79,7 @@ def hierarchy_pos_2(G, root='done', levels=None, width=1., height=1.):
     return make_pos({}, root)
 
 
-def hierarchy_pos_3(G, root='done', levels=None, width=1., height=1.):
+def hierarchy_pos_3(G, root='end', levels=None, width=1., height=1.):
     def make_levels(levels, node, currentLevel=0, parent=None, done=[]):
         if not currentLevel in levels:
             levels[currentLevel] = {"total" : 0, "current" : 0}
@@ -133,7 +133,7 @@ def hierarchy_pos_3(G, root='done', levels=None, width=1., height=1.):
     return make_pos({}, root)[0]
 
 
-def hierarchy_pos_4(G, root='done'):
+def hierarchy_pos_4(G, root='end'):
 
     def remaining_neighbors(neighbors):
         return [n for n in neighbors if n not in list(done.keys())]
@@ -181,7 +181,7 @@ def hierarchy_pos_4(G, root='done'):
 
 def hierarchy_pos_50salads(G):
     pos = {}
-    pos['done'] = (0, 0)
+    pos['end'] = (0, 0)
 
     pos['add_dressing'] = (-1.25, -1)
     pos['serve_salad_onto_plate'] =  (1.7, -1)
@@ -206,5 +206,37 @@ def hierarchy_pos_50salads(G):
     pos['place_cucumber_into_bowl'] = (3.0, -3)
     pos['cut_cucumber'] = (3.0, -4)
     pos['peel_cucumber'] = (2.6, -5)
+
+    return pos
+
+
+def hierarchy_pos_50salads_hard(G):
+    pos = {}
+    pos['end'] = (0, 0)
+
+    pos['add_dressing'] = (-1.25, -1)
+    pos['serve_salad_onto_plate'] =  (1.7, -1)
+
+    pos['mix_dressing'] = (-1.25, -2)
+    pos['mix_ingredients'] = (1.7, -2)
+    pos['ve'] = (1.7, -2.8)
+    
+    pos['add_salt'] = (-2, -3)
+    pos['add_vinegar'] = (-1.6, -3.6)
+    pos['add_oil'] = (-0.9, -3.6)
+    pos['add_pepper'] = (-0.5, -3)
+
+    pos['place_lettuce_into_bowl'] = (0.6, -3.6)
+    pos['cut_lettuce'] = (0.6, -4.4)
+
+    pos['place_cheese_into_bowl'] = (1.4, -3.6)
+    pos['cut_cheese'] = (1.4, -4.4)
+
+    pos['place_tomato_into_bowl'] = (2.2, -3.6)
+    pos['cut_tomato'] = (2.2, -4.4)
+
+    pos['place_cucumber_into_bowl'] = (3.0, -3.6)
+    pos['cut_cucumber'] = (3.0, -4.4)
+    pos['peel_cucumber'] = (2.6, -5.2)
 
     return pos

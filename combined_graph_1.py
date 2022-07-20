@@ -27,7 +27,7 @@ def get_action_list(annotation_file):
             action_name = "_".join(action_split[:-1])
         if len(refined_actions) == 0 or refined_actions[-1] != action_name:
             refined_actions.append(action_name) 
-    refined_actions.append("done")
+    refined_actions.append("end")
 
     return refined_actions
 
@@ -249,7 +249,7 @@ def draw_graph(graph):
 
     try:
         # pos = nx.shell_layout(DG)
-        pos = hierarchy_pos_50salads(DG, 'done')
+        pos = hierarchy_pos_50salads(DG)
         nx.draw_networkx_nodes(DG, pos=pos, node_color=node_color)
     except Exception as e:
         print(e)

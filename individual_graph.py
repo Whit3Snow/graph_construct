@@ -67,12 +67,12 @@ def draw_graph(DG, idx, plot_file, node_list):
 Hyper-parameters
 '''
 LABEL_ROTATION = 30
-GRAPH_WIDTH = 15
+GRAPH_WIDTH = 20
 FONT_SIZE = 8
-# HIGHLIGHT_NODE = {}
+HIGHLIGHT_NODE = {}
 # HIGHLIGHT_NODE = {'mix_ingredients': 'red', 'add_dressing': 'green', 'place_lettuce_into_bowl': 'black'}
 # HIGHLIGHT_NODE = {'peel_cucumber': 'red', 'cut_cucumber': 'green'}
-HIGHLIGHT_NODE = {'mix_dressing': 'red', 'add_salt': 'green'}
+# HIGHLIGHT_NODE = {'mix_dressing': 'red', 'add_salt': 'green'}
 node_count = 0
 node_color = []
 plot_list = ["01-1", "02-1", "03-1"]
@@ -85,7 +85,7 @@ def main(plot_list):
     DG = nx.DiGraph()
 
     for idx, plot_file in enumerate(plot_list):
-        node_list = get_node_list("data/50salads/labels/{}-activityAnnotation.txt".format(plot_file))
+        node_list = get_node_list("data/50salads/labels/{}".format(plot_file))
         draw_graph(DG, idx, plot_file, node_list)
 
     labels = nx.get_node_attributes(DG, 'name') 

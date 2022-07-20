@@ -37,4 +37,4 @@ turn
 wait
 walk
 wipe_cloth
-done
+end

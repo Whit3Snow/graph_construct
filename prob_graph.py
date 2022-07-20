@@ -33,7 +33,7 @@ def get_action_list(annotation_file):
             action_name = "_".join(action_split[:-1])
         if len(refined_actions) == 0 or refined_actions[-1] != action_name:
             refined_actions.append(action_name) 
-    refined_actions.append("done")
+    refined_actions.append("end")
 
     return refined_actions
 
@@ -262,7 +262,7 @@ def draw_graph(graph):
     nodelist = DG.nodes(data=True)
     edgelist = DG.edges(data=True)
 
-    pos = hierarchy_pos_50salads(DG, 'done')
+    pos = hierarchy_pos_50salads(DG, 'end')
     
     for optional, shape in NODE_SHAPES:
         nodes = [n for (n, d) in nodelist if d["is_optional"] == optional]

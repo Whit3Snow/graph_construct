@@ -26,4 +26,4 @@ shift
 turn
 wait
 walk
-done
+end

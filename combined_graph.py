@@ -186,25 +186,25 @@ def reconstruct_graph(graph):
                 node.remove_edge(c_node, 'new')
                 node.add_edge(c_node, 'lower')
 
-    for i, node in enumerate(graph.get_node_list()):
-        node.finalize_afters(graph.get_node_list())
-        for a_node in node.get_afters():
-            node.add_edge(a_node, 'after')
+    # for i, node in enumerate(graph.get_node_list()):
+    #     node.finalize_afters(graph.get_node_list())
+    #     for a_node in node.get_afters():
+    #         node.add_edge(a_node, 'after')
 
-    changed = True
-    while changed:
-        changed = False
-        for i, node in enumerate(graph.get_node_list()):
-            all_edges = node.get_edges().copy()
-            j = 0
-            while j < len(all_edges):
-                _, c_node, c_edge_type = all_edges[j]
-                if c_edge_type == 'after' and node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['after']):
-                    all_edges.remove(all_edges[j])
-                    node.remove_edge(c_node, c_edge_type)
-                    changed = True
-                else:
-                    j += 1
+    # changed = True
+    # while changed:
+    #     changed = False
+    #     for i, node in enumerate(graph.get_node_list()):
+    #         all_edges = node.get_edges().copy()
+    #         j = 0
+    #         while j < len(all_edges):
+    #             _, c_node, c_edge_type = all_edges[j]
+    #             if c_edge_type == 'after' and node.is_connected(c_node, visited_nodes=[], ignored_edges=[all_edges[j]], target_edge_types=['after']):
+    #                 all_edges.remove(all_edges[j])
+    #                 node.remove_edge(c_node, c_edge_type)
+    #                 changed = True
+    #             else:
+    #                 j += 1
 
     return graph
 
@@ -267,7 +267,7 @@ if __name__ == "__main__":
 
     all_action_list, data_list, action_set = dataloader.get_actions()
 
-    # individual_graph.main(data_list)
+    individual_graph.main(data_list)
 
     graph_object = construct_graph(all_action_list, action_set)
     graph_object = reconstruct_graph(graph_object)

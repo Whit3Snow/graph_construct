@@ -32,6 +32,8 @@ class GraphRunner():
         self.action_log = []
         self.test_video = action_list != None
 
+        self.pending_actions = []
+
     def draw_graph(self):
         if self.test_video:
             return
@@ -40,8 +42,8 @@ class GraphRunner():
 
     def run(self):
         self.update_node_states()
-        done_node = self.graph.get_node('done')
-        while not self.is_complete(done_node):
+        end_node = self.graph.get_node('end')
+        while not self.is_complete(end_node):
             self.draw_graph()
             self.show_executable_nodes()
             next_action = self.get_next_action()
